@@ -109,7 +109,7 @@ const HeroSection = () => {
         className="fixed left-6 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col gap-5 p-3 rounded-full bg-white/70 dark:bg-[#0A0A0A]/70 backdrop-blur-2xl border border-white/80 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.04)] dark:shadow-black/50"
       >
         <a
-          href="https://github.com"
+          href="https://github.com/shariarnafis45/"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="GitHub Profile"
@@ -124,7 +124,7 @@ const HeroSection = () => {
           </svg>
         </a>
         <a
-          href="https://linkedin.com"
+          href="https://www.linkedin.com/in/shariarnafis/"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="LinkedIn Profile"
@@ -139,7 +139,7 @@ const HeroSection = () => {
           </svg>
         </a>
         <a
-          href="mailto:contact@shariarnafis.com"
+          href="mailto:nafisshahworkmail@gmail.com"
           aria-label="Send Email"
           className="w-10 h-10 rounded-full flex items-center justify-center text-[#5F6368] dark:text-[#A0A0A0] hover:text-[#0A0A0A] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-all duration-300 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         >

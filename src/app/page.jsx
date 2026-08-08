@@ -1,4 +1,5 @@
 import AboutSection from "@/components/AboutSection";
+import CTASection from "@/components/CTASection";
 import FeaturedProjects from "@/components/FeaturedProjects";
 import HeroSection from "@/components/Hero";
 import SkillsSection from "@/components/SkillsSection";
@@ -11,6 +12,7 @@ const HomePage = () => {
       <AboutSection/>
       <FeaturedProjects/>
       <SkillsSection/>
+      <CTASection/>
     </>
   );
 };
