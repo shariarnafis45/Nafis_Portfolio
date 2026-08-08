@@ -6,7 +6,6 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import HeroImage from "@/assets/nafis.png";
 
-// Premium Smooth Easing Curve for butter-smooth animations
 const smoothEase = [0.22, 1, 0.36, 1];
 
 const containerVariants = {
@@ -290,7 +289,6 @@ const HeroSection = () => {
             </motion.div>
           </motion.div>
 
-          {/* 3. RIGHT COLUMN - HERO IMAGE & STATS (ADDED -translate-x to move it left) */}
           <div className="lg:col-span-5 relative flex flex-col items-center justify-center order-1 lg:order-2 lg:-translate-x-8 xl:-translate-x-14 transition-transform duration-300">
             {/* Background Fluid Element */}
             <motion.div
