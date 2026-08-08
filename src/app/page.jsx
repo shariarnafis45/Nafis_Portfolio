@@ -1,6 +1,7 @@
 import AboutSection from "@/components/AboutSection";
 import FeaturedProjects from "@/components/FeaturedProjects";
 import HeroSection from "@/components/Hero";
+import SkillsSection from "@/components/SkillsSection";
 import React from "react";
 
 const HomePage = () => {
@@ -9,6 +10,7 @@ const HomePage = () => {
       <HeroSection />
       <AboutSection/>
       <FeaturedProjects/>
+      <SkillsSection/>
     </>
   );
 };
