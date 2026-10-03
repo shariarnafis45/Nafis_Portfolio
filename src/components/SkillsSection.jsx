@@ -1,555 +1,262 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { FiArrowDown } from "react-icons/fi";
 
 import SectionBadge from "./shared/SectionBadge";
+import { useCurtainNav } from "./shared/CurtainNav";
+import { skillsData } from "./shared/skillsData";
 
-function Glyph({ d, className, style }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={className}
-      style={style}
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d={d} />
-    </svg>
-  );
-}
-const glyph = (d) => (props) => <Glyph d={d} {...props} />;
-
-// --- Hand-drawn generic marks (only for the 5 brands with no official glyph) ---
-const PhotoshopIcon = ({ className, style }) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={className}
-    style={style}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="3" y="4" width="18" height="16" rx="2" />
-    <circle cx="8.5" cy="9.5" r="1.5" fill="currentColor" stroke="none" />
-    <polyline points="21 15 15 9 3 20" />
-  </svg>
-);
-
-const LightroomIcon = ({ className, style }) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={className}
-    style={style}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="5" y1="4" x2="5" y2="20" />
-    <circle cx="5" cy="9" r="1.6" fill="currentColor" stroke="none" />
-    <line x1="12" y1="4" x2="12" y2="20" />
-    <circle cx="12" cy="15" r="1.6" fill="currentColor" stroke="none" />
-    <line x1="19" y1="4" x2="19" y2="20" />
-    <circle cx="19" cy="7" r="1.6" fill="currentColor" stroke="none" />
-  </svg>
-);
-
-const CanvaIcon = ({ className, style }) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={className}
-    style={style}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="9" />
-    <circle cx="9" cy="10" r="1.3" fill="currentColor" stroke="none" />
-    <circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none" />
-    <circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none" />
-  </svg>
-);
-
-const VsCodeIcon = ({ className, style }) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={className}
-    style={style}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="8 6 3 12 8 18" />
-    <polyline points="16 6 21 12 16 18" />
-  </svg>
-);
-
-const SurgeIcon = ({ className, style }) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={className}
-    style={style}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="12" y1="20" x2="12" y2="6" />
-    <polyline points="6 11 12 5 18 11" />
-  </svg>
-);
+/* -------------------------------------------------------------------------- */
+/*  CONFIG                                                                    */
+/* -------------------------------------------------------------------------- */
 
 const smoothEase = [0.22, 1, 0.36, 1];
 
-const fadeUpVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: smoothEase },
-  },
-};
+// Role colour shared by the Hero (it sets --fx on <html>). Falls back to emerald.
+const ACCENT = "rgb(var(--fx,16,185,129))";
+const accentA = (a) => `rgba(var(--fx,16,185,129),${a})`;
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-  },
-};
+const WORK_TARGET = "projects";
 
-const gridVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.04 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.9, y: 14 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: smoothEase },
-  },
-  exit: { opacity: 0, scale: 0.9, y: -10, transition: { duration: 0.25 } },
-};
-
-const skillsData = [
-  // Frontend
-  {
-    name: "HTML5",
-    category: "Frontend",
-    Icon: glyph(
-      "M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z",
-    ),
-    bg: "#E34F26",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "CSS3",
-    category: "Frontend",
-    Icon: glyph(
-      "M0 0v20.16A3.84 3.84 0 0 0 3.84 24h16.32A3.84 3.84 0 0 0 24 20.16V3.84A3.84 3.84 0 0 0 20.16 0Zm14.256 13.08c1.56 0 2.28 1.08 2.304 2.64h-1.608c.024-.288-.048-.6-.144-.84-.096-.192-.288-.264-.552-.264-.456 0-.696.264-.696.84-.024.576.288.888.768 1.08.72.288 1.608.744 1.92 1.296q.432.648.432 1.656c0 1.608-.912 2.592-2.496 2.592-1.656 0-2.4-1.032-2.424-2.688h1.68c0 .792.264 1.176.792 1.176.264 0 .456-.072.552-.24.192-.312.24-1.176-.048-1.512-.312-.408-.912-.6-1.32-.816q-.828-.396-1.224-.936c-.24-.36-.36-.888-.36-1.536 0-1.44.936-2.472 2.424-2.448m5.4 0c1.584 0 2.304 1.08 2.328 2.64h-1.608c0-.288-.048-.6-.168-.84-.096-.192-.264-.264-.528-.264-.48 0-.72.264-.72.84s.288.888.792 1.08c.696.288 1.608.744 1.92 1.296.264.432.408.984.408 1.656.024 1.608-.888 2.592-2.472 2.592-1.68 0-2.424-1.056-2.448-2.688h1.68c0 .744.264 1.176.792 1.176.264 0 .456-.072.552-.24.216-.312.264-1.176-.048-1.512-.288-.408-.888-.6-1.32-.816-.552-.264-.96-.576-1.2-.936s-.36-.888-.36-1.536c-.024-1.44.912-2.472 2.4-2.448m-11.031.018c.711-.006 1.419.198 1.839.63.432.432.672 1.128.648 1.992H9.336c.024-.456-.096-.792-.432-.96-.312-.144-.768-.048-.888.24-.12.264-.192.576-.168.864v3.504c0 .744.264 1.128.768 1.128a.65.65 0 0 0 .552-.264c.168-.24.192-.552.168-.84h1.776c.096 1.632-.984 2.712-2.568 2.688-1.536 0-2.496-.864-2.472-2.472v-4.032c0-.816.24-1.44.696-1.848.432-.408 1.146-.624 1.857-.63",
-    ),
-    bg: "#663399",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Tailwind CSS",
-    category: "Frontend",
-    Icon: glyph(
-      "M12.001,4.8c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 C13.666,10.618,15.027,12,18.001,12c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C16.337,6.182,14.976,4.8,12.001,4.8z M6.001,12c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 c1.177,1.194,2.538,2.576,5.512,2.576c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C10.337,13.382,8.976,12,6.001,12z",
-    ),
-    bg: "#06B6D4",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "JavaScript",
-    category: "Frontend",
-    Icon: glyph(
-      "M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z",
-    ),
-    bg: "#F7DF1E",
-    fg: "#1A1A1A",
-  },
-
-  {
-    name: "React",
-    category: "Frontend",
-    Icon: glyph(
-      "M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z",
-    ),
-    bg: "#0B1220",
-    fg: "#61DAFB",
-  },
-  {
-    name: "Next.js",
-    category: "Frontend",
-    Icon: glyph(
-      "M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z",
-    ),
-    bg: "#000000",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "React Router",
-    category: "Frontend",
-    Icon: glyph(
-      "M12.118 5.466a2.306 2.306 0 00-.623.08c-.278.067-.702.332-.953.583-.41.423-.49.609-.662 1.469-.08.423.41 1.43.847 1.734.45.317 1.085.502 2.065.608 1.429.16 1.84.636 1.84 2.197 0 1.377-.385 1.747-1.96 1.906-1.707.172-2.58.834-2.765 2.117-.106.781.41 1.76 1.125 2.091 1.627.768 3.15-.198 3.467-2.196.211-1.284.622-1.642 1.998-1.747 1.588-.133 2.409-.675 2.713-1.787.278-1.02-.304-2.157-1.297-2.554-.264-.106-.873-.238-1.35-.291-1.495-.16-1.879-.424-2.038-1.39-.225-1.337-.317-1.562-.794-2.09a2.174 2.174 0 00-1.613-.73zm-4.785 4.36a2.145 2.145 0 00-.497.048c-1.469.318-2.17 2.051-1.35 3.295 1.178 1.774 3.944.953 3.97-1.177.012-1.193-.98-2.143-2.123-2.166zM2.089 14.19a2.22 2.22 0 00-.427.052c-2.158.476-2.237 3.626-.106 4.182.53.145.582.145 1.111.013 1.191-.318 1.866-1.456 1.549-2.607-.278-1.02-1.144-1.664-2.127-1.64zm19.824.008c-.233.002-.477.058-.784.162-1.39.477-1.866 2.092-.98 3.336.557.794 1.96 1.058 2.82.516 1.416-.874 1.363-3.057-.093-3.746-.38-.186-.663-.271-.963-.268z",
-    ),
-    bg: "#CA4245",
-    fg: "#FFFFFF",
-  },
-
-  // Backend
-  {
-    name: "Node.js",
-    category: "Backend",
-    Icon: glyph(
-      "M11.998,24c-0.321,0-0.641-0.084-0.922-0.247l-2.936-1.737c-0.438-0.245-0.224-0.332-0.08-0.383 c0.585-0.203,0.703-0.25,1.328-0.604c0.065-0.037,0.151-0.023,0.218,0.017l2.256,1.339c0.082,0.045,0.197,0.045,0.272,0l8.795-5.076 c0.082-0.047,0.134-0.141,0.134-0.238V6.921c0-0.099-0.053-0.192-0.137-0.242l-8.791-5.072c-0.081-0.047-0.189-0.047-0.271,0 L3.075,6.68C2.99,6.729,2.936,6.825,2.936,6.921v10.15c0,0.097,0.054,0.189,0.139,0.235l2.409,1.392 c1.307,0.654,2.108-0.116,2.108-0.89V7.787c0-0.142,0.114-0.253,0.256-0.253h1.115c0.139,0,0.255,0.112,0.255,0.253v10.021 c0,1.745-0.95,2.745-2.604,2.745c-0.508,0-0.909,0-2.026-0.551L2.28,18.675c-0.57-0.329-0.922-0.945-0.922-1.604V6.921 c0-0.659,0.353-1.275,0.922-1.603l8.795-5.082c0.557-0.315,1.296-0.315,1.848,0l8.794,5.082c0.57,0.329,0.924,0.944,0.924,1.603 v10.15c0,0.659-0.354,1.273-0.924,1.604l-8.794,5.078C12.643,23.916,12.324,24,11.998,24z M19.099,13.993 c0-1.9-1.284-2.406-3.987-2.763c-2.731-0.361-3.009-0.548-3.009-1.187c0-0.528,0.235-1.233,2.258-1.233 c1.807,0,2.473,0.389,2.747,1.607c0.024,0.115,0.129,0.199,0.247,0.199h1.141c0.071,0,0.138-0.031,0.186-0.081 c0.048-0.054,0.074-0.123,0.067-0.196c-0.177-2.098-1.571-3.076-4.388-3.076c-2.508,0-4.004,1.058-4.004,2.833 c0,1.925,1.488,2.457,3.895,2.695c2.88,0.282,3.103,0.703,3.103,1.269c0,0.983-0.789,1.402-2.642,1.402 c-2.327,0-2.839-0.584-3.011-1.742c-0.02-0.124-0.126-0.215-0.253-0.215h-1.137c-0.141,0-0.254,0.112-0.254,0.253 c0,1.482,0.806,3.248,4.655,3.248C17.501,17.007,19.099,15.91,19.099,13.993z",
-    ),
-    bg: "#5FA04E",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Express.js",
-    category: "Backend",
-    Icon: glyph(
-      "M12.262 16.666h1.146l6.975-9.325H19.22zm9.778 1.441v.004l-4.334-5.706-.557.74 4.873 6.682H.945V4.173h9.505l5.026 6.7.574-.772-4.374-5.928h.003l-.719-.945H0v17.544h24zM10.917 8.705a3.8 3.8 0 0 0-1.292-1.183q-.796-.45-1.916-.45c-.746 0-1.37.14-1.906.424a3.76 3.76 0 0 0-1.31 1.12 4.9 4.9 0 0 0-.75 1.581 7.17 7.17 0 0 0 0 3.696c.148.567.402 1.101.75 1.573a3.5 3.5 0 0 0 1.31 1.066q.803.39 1.906.389 1.77 0 2.739-.868.966-.867 1.328-2.457h-1.139q-.271 1.084-.977 1.734-.704.651-1.952.65-.812 0-1.392-.342a3.1 3.1 0 0 1-.957-.869 3.5 3.5 0 0 1-.551-1.182 5 5 0 0 1-.17-1.133 9 9 0 0 0-.015-.286 4.5 4.5 0 0 1 .015-.829c.047-.418.147-.83.296-1.223A3.7 3.7 0 0 1 5.54 9.05a2.9 2.9 0 0 1 .922-.742q.541-.28 1.246-.28c.47 0 .869.093 1.23.28q.541.281.922.742.379.461.587 1.057t.225 1.246H5.625l.004.957h6.182a7.3 7.3 0 0 0-.18-1.924 4.9 4.9 0 0 0-.715-1.68z",
-    ),
-    bg: "#0A0A0A",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "JWT",
-    category: "Backend",
-    Icon: glyph(
-      "M10.2 0v6.456L12 8.928l1.8-2.472V0zm3.6 6.456v3.072l2.904-.96L20.52 3.36l-2.928-2.136zm2.904 2.112l-1.8 2.496 2.928.936 6.144-1.992-1.128-3.432zM17.832 12l-2.928.936 1.8 2.496 6.144 1.992 1.128-3.432zm-1.128 3.432l-2.904-.96v3.072l3.792 5.232 2.928-2.136zM13.8 17.544L12 15.072l-1.8 2.472V24h3.6zm-3.6 0v-3.072l-2.904.96L3.48 20.64l2.928 2.136zm-2.904-2.112l1.8-2.496L6.168 12 .024 13.992l1.128 3.432zM6.168 12l2.928-.936-1.8-2.496-6.144-1.992-1.128 3.432zm1.128-3.432l2.904.96V6.456L6.408 1.224 3.48 3.36Z",
-    ),
-    bg: "#0A0A0A",
-    fg: "#FFFFFF",
-  },
-
-  // Database & Cloud
-  {
-    name: "MongoDB",
-    category: "Database & Cloud",
-    Icon: glyph(
-      "M17.193 9.555c-1.264-5.58-4.252-7.414-4.573-8.115-.28-.394-.53-.954-.735-1.44-.036.495-.055.685-.523 1.184-.723.566-4.438 3.682-4.74 10.02-.282 5.912 4.27 9.435 4.888 9.884l.07.05A73.49 73.49 0 0111.91 24h.481c.114-1.032.284-2.056.51-3.07.417-.296.604-.463.85-.693a11.342 11.342 0 003.639-8.464c.01-.814-.103-1.662-.197-2.218zm-5.336 8.195s0-8.291.275-8.29c.213 0 .49 10.695.49 10.695-.381-.045-.765-1.76-.765-2.405z",
-    ),
-    bg: "#47A248",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Vercel",
-    category: "Database & Cloud",
-    Icon: glyph("m12 1.608 12 20.784H0Z"),
-    bg: "#000000",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Netlify",
-    category: "Database & Cloud",
-    Icon: glyph(
-      "M6.49 19.04h-.23L5.13 17.9v-.23l1.73-1.71h1.2l.15.15v1.2L6.5 19.04ZM5.13 6.31V6.1l1.13-1.13h.23L8.2 6.68v1.2l-.15.15h-1.2L5.13 6.31Zm9.96 9.09h-1.65l-.14-.13v-3.83c0-.68-.27-1.2-1.1-1.23-.42 0-.9 0-1.43.02l-.07.08v4.96l-.14.14H8.9l-.13-.14V8.73l.13-.14h3.7a2.6 2.6 0 0 1 2.61 2.6v4.08l-.13.14Zm-8.37-2.44H.14L0 12.82v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14Zm17.14 0h-6.58l-.14-.14v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14ZM11.05 6.55V1.64l.14-.14h1.65l.14.14v4.9l-.14.14h-1.65l-.14-.13Zm0 15.81v-4.9l.14-.14h1.65l.14.13v4.91l-.14.14h-1.65l-.14-.14Z",
-    ),
-    bg: "#00C7B7",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Surge.sh",
-    category: "Database & Cloud",
-    Icon: SurgeIcon,
-    bg: "#FF6B35",
-    fg: "#FFFFFF",
-  },
-
-  // Tools
-  {
-    name: "Git",
-    category: "Tools",
-    Icon: glyph(
-      "M13.09 23.549a1.54 1.54 0 0 1-2.18 0L.451 13.089a1.54 1.54 0 0 1 0-2.179l7.191-7.19 2.733 2.733a1.85 1.85 0 0 0 .964 2.326v6.66a1.849 1.849 0 1 0 1.54 0V8.957l2.508 2.508a1.85 1.85 0 1 0 1.09-1.09l-2.634-2.634a1.85 1.85 0 0 0-2.378-2.377L8.73 2.63 10.91.451a1.54 1.54 0 0 1 2.179 0l10.459 10.46a1.54 1.54 0 0 1 0 2.179z",
-    ),
-    bg: "#F03C2E",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "GitHub",
-    category: "Tools",
-    Icon: glyph(
-      "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
-    ),
-    bg: "#181717",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "NPM",
-    category: "Tools",
-    Icon: glyph(
-      "M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z",
-    ),
-    bg: "#CB3837",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Vite",
-    category: "Tools",
-    Icon: glyph(
-      "M13.056 23.238a.57.57 0 0 1-1.02-.355v-5.202c0-.63-.512-1.143-1.144-1.143H5.148a.57.57 0 0 1-.464-.903l3.777-5.29c.54-.753 0-1.804-.93-1.804H.57a.574.574 0 0 1-.543-.746.6.6 0 0 1 .08-.157L5.008.78a.57.57 0 0 1 .467-.24h14.589a.57.57 0 0 1 .466.903l-3.778 5.29c-.54.755 0 1.806.93 1.806h5.745c.238 0 .424.138.513.322a.56.56 0 0 1-.063.603z",
-    ),
-    bg: "#9135FF",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "VS Code",
-    category: "Tools",
-    Icon: VsCodeIcon,
-    bg: "#007ACC",
-    fg: "#FFFFFF",
-  },
-
-  // Others
-  {
-    name: "Figma",
-    category: "Others",
-    Icon: glyph(
-      "M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441c0 2.503-2.047 4.539-4.563 4.539zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z",
-    ),
-    bg: "#F24E1E",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Canva",
-    category: "Others",
-    Icon: CanvaIcon,
-    bg: "#00C4CC",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Photoshop",
-    category: "Others",
-    Icon: PhotoshopIcon,
-    bg: "#001E36",
-    fg: "#31A8FF",
-  },
-  {
-    name: "Lightroom",
-    category: "Others",
-    Icon: LightroomIcon,
-    bg: "#001E36",
-    fg: "#31C5F0",
-  },
-  {
-    name: "WordPress",
-    category: "Others",
-    Icon: glyph(
-      "M21.469 6.825c.84 1.537 1.318 3.3 1.318 5.175 0 3.979-2.156 7.456-5.363 9.325l3.295-9.527c.615-1.54.82-2.771.82-3.864 0-.405-.026-.78-.07-1.11m-7.981.105c.647-.03 1.232-.105 1.232-.105.582-.075.514-.93-.067-.899 0 0-1.755.135-2.88.135-1.064 0-2.85-.15-2.85-.15-.585-.03-.661.855-.075.885 0 0 .54.061 1.125.09l1.68 4.605-2.37 7.08L5.354 6.9c.649-.03 1.234-.1 1.234-.1.585-.075.516-.93-.065-.896 0 0-1.746.138-2.874.138-.2 0-.438-.008-.69-.015C4.911 3.15 8.235 1.215 12 1.215c2.809 0 5.365 1.072 7.286 2.833-.046-.003-.091-.009-.141-.009-1.06 0-1.812.923-1.812 1.914 0 .89.513 1.643 1.06 2.531.411.72.89 1.643.89 2.977 0 .915-.354 1.994-.821 3.479l-1.075 3.585-3.9-11.61.001.014zM12 22.784c-1.059 0-2.081-.153-3.048-.437l3.237-9.406 3.315 9.087c.024.053.05.101.078.149-1.12.393-2.325.609-3.582.609M1.211 12c0-1.564.336-3.05.935-4.39L7.29 21.709C3.694 19.96 1.212 16.271 1.211 12M12 0C5.385 0 0 5.385 0 12s5.385 12 12 12 12-5.385 12-12S18.615 0 12 0",
-    ),
-    bg: "#21759B",
-    fg: "#FFFFFF",
-  },
-  {
-    name: "Elementor",
-    category: "Others",
-    Icon: glyph(
-      "M12 0C5.372 0 0 5.372 0 12c0 6.626 5.372 12 12 12s12-5.372 12-12c0-6.626-5.372-12-12-12ZM9 17H7V7H9Zm8 0H11V15h6Zm0-4H11V11h6Zm0-4H11V7h6Z",
-    ),
-    bg: "#92003B",
-    fg: "#FFFFFF",
-  },
+// Ordered like an architecture diagram: what users see -> where it's built.
+const LAYERS = [
+  { name: "Frontend", desc: "What people see and touch." },
+  { name: "Backend", desc: "Where the logic and APIs live." },
+  { name: "Database & Cloud", desc: "Data, deployment and hosting." },
+  { name: "Tools", desc: "How I build and ship." },
+  { name: "Others", desc: "Design and CMS work." },
 ];
 
-const categories = [
-  "Frontend",
-  "Backend",
-  "Database & Cloud",
-  "Tools",
-  "Others",
-];
+/* -------------------------------------------------------------------------- */
+/*  SMALL PIECES                                                              */
+/* -------------------------------------------------------------------------- */
+
+// Glass card with a cursor-following spotlight that picks up the role colour.
+const Layer = ({ children, className = "", reduce }) => {
+  const onMove = (e) => {
+    if (e.pointerType !== "mouse") return;
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+  };
+
+  return (
+    <motion.div
+      onPointerMove={onMove}
+      initial={reduce ? false : { opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8, ease: smoothEase }}
+      className={`group/layer relative overflow-hidden rounded-[1.75rem] border border-black/[0.07] dark:border-white/10 bg-white/75 dark:bg-white/[0.04] shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none ${className}`}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/layer:opacity-100"
+        style={{
+          background: `radial-gradient(320px circle at var(--mx,50%) var(--my,50%), ${accentA(
+            0.13,
+          )}, transparent 70%)`,
+        }}
+      />
+      {children}
+    </motion.div>
+  );
+};
+
+const SkillChip = ({ skill, index, reduce }) => {
+  const Icon = skill.Icon;
+  return (
+    <motion.li
+      initial={reduce ? false : { opacity: 0, scale: 0.9, y: 10 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{
+        duration: 0.5,
+        ease: smoothEase,
+        delay: 0.05 + index * 0.04,
+      }}
+      style={{ "--brand": skill.bg }}
+      className="group/chip inline-flex items-center gap-2.5 rounded-full border border-black/[0.07] dark:border-white/10 bg-white dark:bg-white/[0.05] py-1.5 pl-1.5 pr-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-8px_var(--brand)]"
+    >
+      <span
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform duration-500 group-hover/chip:scale-110 group-hover/chip:-rotate-6"
+        style={{ backgroundColor: skill.bg }}
+      >
+        <Icon className="h-4 w-4" style={{ color: skill.fg }} />
+      </span>
+      <span className="text-[13px] font-semibold tracking-tight text-[#0A0A0A] dark:text-white">
+        {skill.name}
+      </span>
+    </motion.li>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  SKILLS                                                                    */
+/* -------------------------------------------------------------------------- */
 
 export default function SkillsSection() {
-  const [activeTab, setActiveTab] = useState("Frontend");
-
-  const filteredSkills = skillsData.filter(
-    (skill) => skill.category === activeTab,
-  );
+  const reduce = !!useReducedMotion();
+  const { go, curtain } = useCurtainNav();
+  const [reached, setReached] = useState(-1); // furthest layer scrolled into view
 
   return (
     <section
       id="skills"
-      className="relative pt-16 pb-24 lg:pt-20 lg:pb-32 overflow-hidden bg-[#F8F9FA] dark:bg-[#0A0A0A] transition-colors duration-700 font-sans"
+      className="relative scroll-mt-24 py-20 lg:py-28 font-sans"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1.5px,transparent_1.5px)] dark:bg-[radial-gradient(#1f2937_1.5px,transparent_1.5px)] [background-size:28px_28px] opacity-60 pointer-events-none" />
-
-      <div className="absolute -top-24 left-1/4 w-[28rem] h-[28rem] bg-blue-500/10 dark:bg-blue-500/[0.08] rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-32 right-1/4 w-[26rem] h-[26rem] bg-indigo-500/[0.07] dark:bg-indigo-500/[0.06] rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="max-w-[1240px] mx-auto px-5 sm:px-6 lg:px-8 w-full relative z-10">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={staggerContainer}
-          className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-8 relative z-10"
-        >
-          <div className="max-w-2xl flex flex-col items-start">
-            <motion.div variants={fadeUpVariants} className="mb-5">
+      <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 sm:px-6 lg:px-8 xl:pl-24 2xl:pl-8">
+        {/* ------------------------------ HEADER ------------------------------ */}
+        <div className="mb-12 lg:mb-16 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: smoothEase }}
+              className="mb-6"
+            >
               <SectionBadge title="My Expertise" />
             </motion.div>
 
-            <motion.h2
-              variants={fadeUpVariants}
-              className="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold text-[#111827] dark:text-white leading-[1.18] tracking-tight"
-            >
-              Skills &amp;{" "}
-              <span className="text-[#4B5563] dark:text-[#9CA3AF]">
-                Technologies.
+            <h2 className="text-[2.6rem] sm:text-6xl lg:text-[4.25rem] font-bold leading-[1.04] tracking-[-0.035em] text-[#0A0A0A] dark:text-white">
+              <span className="block overflow-hidden pb-[0.12em] -mb-[0.12em]">
+                <motion.span
+                  className="block"
+                  initial={reduce ? false : { y: "110%" }}
+                  whileInView={{ y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 1.1, ease: smoothEase, delay: 0.05 }}
+                >
+                  Sharp tools.
+                </motion.span>
               </span>
-            </motion.h2>
+              <span className="block overflow-hidden pb-[0.12em] -mb-[0.12em]">
+                <motion.span
+                  className="block"
+                  style={{ color: ACCENT }}
+                  initial={reduce ? false : { y: "110%" }}
+                  whileInView={{ y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 1.1, ease: smoothEase, delay: 0.2 }}
+                >
+                  Steady hands.
+                </motion.span>
+              </span>
+            </h2>
           </div>
 
           <motion.p
-            variants={fadeUpVariants}
-            className="text-base sm:text-[1.05rem] text-[#4B5563] dark:text-[#9CA3AF] leading-relaxed max-w-[26rem] lg:mb-2 lg:pl-6 lg:border-l-2 lg:border-black/10 dark:lg:border-white/10"
+            initial={reduce ? false : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: smoothEase, delay: 0.3 }}
+            className="max-w-sm text-base sm:text-lg leading-relaxed text-[#5F6368] dark:text-[#A0A0A0]"
           >
-            A living toolkit — the languages, frameworks, and platforms I reach
-            for to design, build, and ship production-ready products.
+            The full stack I reach for, from the screen a user sees down to the
+            database behind it.
           </motion.p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.8, ease: smoothEase }}
-          className="bg-white/60 dark:bg-white/[0.03] backdrop-blur-2xl rounded-[2rem] border border-white/40 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] p-6 sm:p-8 lg:p-12 relative overflow-hidden"
-        >
-          {/* Glass top-edge highlight */}
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-black/10 dark:via-white/20 to-transparent" />
-          {/* Subtle inner sheen */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/40 dark:from-white/[0.06] to-transparent opacity-70 pointer-events-none" />
+        {/* ------------------------------ LAYERS ------------------------------ */}
+        <ol className="flex flex-col gap-4">
+          {LAYERS.map((layer, i) => {
+            const skills = skillsData.filter((s) => s.category === layer.name);
+            if (!skills.length) return null;
+            const isReached = i <= reached;
+            const isLast = i === LAYERS.length - 1;
 
-          <div className="relative z-10">
-            {/* Row above the tabs */}
-            <div className="flex justify-end mb-6 sm:mb-8">
-              <a
-                href="#projects"
-                className="group flex items-center gap-2 text-sm font-semibold text-[#4B5563] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white transition-colors"
+            return (
+              <motion.li
+                key={layer.name}
+                onViewportEnter={() => setReached((r) => (i > r ? i : r))}
+                viewport={{ margin: "0px 0px -30% 0px" }}
+                className="relative flex items-start gap-3 sm:gap-5"
               >
-                See it in action
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/[0.04] dark:bg-white/5 group-hover:bg-black/10 dark:group-hover:bg-white/10 transition-colors">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {/* connector down to the next layer, fills as you scroll */}
+                {!isLast && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-5 top-[60px] h-[calc(100%+1rem-40px)] w-[2px] -translate-x-1/2 rounded-full bg-black/[0.07] dark:bg-white/[0.09]"
                   >
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </span>
-              </a>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 mb-10 relative z-10">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setActiveTab(category)}
-                  className={`relative shrink-0 whitespace-nowrap px-5 py-2.5 rounded-full text-[13px] sm:text-sm font-semibold transition-colors duration-300 outline-none ${
-                    activeTab === category
-                      ? "text-white dark:text-[#0A0A0A]"
-                      : "text-[#5F6368] dark:text-[#A1A1AA] bg-black/[0.03] dark:bg-white/[0.03] hover:bg-black/[0.07] dark:hover:bg-white/[0.07]"
-                  }`}
-                >
-                  {activeTab === category && (
-                    <motion.div
-                      layoutId="activeTabIndicator"
-                      className="absolute inset-0 bg-[#0A0A0A] dark:bg-white rounded-full -z-10 shadow-[0_4px_14px_rgba(0,0,0,0.15)]"
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 34,
+                    <span
+                      className="block h-full w-full origin-top rounded-full transition-transform duration-700 ease-out"
+                      style={{
+                        backgroundColor: ACCENT,
+                        transform: `scaleY(${i < reached ? 1 : 0})`,
                       }}
                     />
-                  )}
-                  {category}
-                </button>
-              ))}
-            </div>
+                  </span>
+                )}
 
-            {/* Skills Grid */}
-            <div className="relative min-h-[300px] z-10">
-              <motion.div
-                layout
-                variants={gridVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
-              >
-                <AnimatePresence mode="popLayout">
-                  {filteredSkills.map((skill) => {
-                    const Icon = skill.Icon;
-                    return (
-                      <motion.div
+                {/* numbered node */}
+                <span
+                  aria-hidden="true"
+                  className="relative z-10 mt-5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 bg-[#F7F7F5] dark:bg-[#161618] font-mono text-xs font-semibold transition-all duration-500"
+                  style={{
+                    borderColor: isReached ? ACCENT : "rgba(127,127,127,0.25)",
+                    color: isReached ? ACCENT : "#8A8A8A",
+                    boxShadow: isReached
+                      ? `0 0 0 5px ${accentA(0.14)}`
+                      : "none",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                <Layer
+                  reduce={reduce}
+                  className="min-w-0 flex-1 p-5 sm:p-6 lg:grid lg:grid-cols-[220px_1fr] lg:gap-8 lg:items-center"
+                >
+                  <div className="relative">
+                    <h3 className="text-lg font-bold tracking-tight text-[#0A0A0A] dark:text-white sm:text-xl">
+                      {layer.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-[#5F6368] dark:text-[#A0A0A0]">
+                      {layer.desc}
+                    </p>
+                  </div>
+
+                  <ul className="relative mt-5 flex flex-wrap gap-2.5 lg:mt-0">
+                    {skills.map((skill, k) => (
+                      <SkillChip
                         key={skill.name}
-                        layout
-                        variants={itemVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        whileHover={{
-                          y: -6,
-                          transition: { duration: 0.25, ease: smoothEase },
-                        }}
-                        className="group flex flex-col items-center justify-center bg-white/70 dark:bg-white/[0.03] backdrop-blur-md p-6 rounded-[1.25rem] border border-black/5 dark:border-white/10 shadow-sm hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-                      >
-                        {/* Icon tile — official brand color, with a matching glow on hover */}
-                        <div className="relative mb-4">
-                          <div
-                            className="absolute inset-0 rounded-2xl blur-lg opacity-0 group-hover:opacity-60 scale-90 group-hover:scale-125 transition-all duration-500"
-                            style={{ backgroundColor: skill.bg }}
-                          />
-                          <div
-                            className="relative w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 shadow-sm"
-                            style={{ backgroundColor: skill.bg }}
-                          >
-                            <Icon
-                              className="w-7 h-7"
-                              style={{ color: skill.fg }}
-                            />
-                          </div>
-                        </div>
+                        skill={skill}
+                        index={k}
+                        reduce={reduce}
+                      />
+                    ))}
+                  </ul>
+                </Layer>
+              </motion.li>
+            );
+          })}
+        </ol>
 
-                        {/* Skill Name */}
-                        <span className="text-[13px] font-semibold text-[#4B5563] dark:text-[#A1A1AA] group-hover:text-[#0A0A0A] dark:group-hover:text-white transition-colors text-center">
-                          {skill.name}
-                        </span>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.div>
-            </div>
-          </div>
+        {/* ------------------------------- CTA ------------------------------- */}
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: smoothEase }}
+          className="mt-10 flex justify-start sm:pl-[3.75rem]"
+        >
+          <a
+            href={`#${WORK_TARGET}`}
+            onClick={go(WORK_TARGET, "Featured Works")}
+            data-cursor="View"
+            className="group inline-flex items-center justify-center gap-2 rounded-full border border-black/[0.08] dark:border-white/10 bg-white/70 dark:bg-white/5 px-6 py-3.5 text-sm font-medium tracking-tight text-[#0A0A0A] dark:text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          >
+            See it in action
+            <FiArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
+          </a>
         </motion.div>
       </div>
+
+      {/* Same curtain transition as the Hero */}
+      {curtain}
     </section>
   );
 }
