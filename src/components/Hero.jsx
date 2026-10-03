@@ -346,7 +346,7 @@ const HeroSection = () => {
       />
 
       {/* Floating social sidebar (xl and up) */}
-      <motion.aside
+      {/* <motion.aside
         initial={reduce ? false : { x: -50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 1.2, ease: smoothEase, delay: 0.8 }}
@@ -365,7 +365,7 @@ const HeroSection = () => {
             <SocialIcon social={s} className="w-5 h-5" />
           </a>
         ))}
-      </motion.aside>
+      </motion.aside> */}
 
       {/* Main container */}
       <div className="relative z-10 w-full max-w-[1240px] mx-auto px-5 sm:px-6 lg:px-8 xl:pl-24 2xl:pl-8">

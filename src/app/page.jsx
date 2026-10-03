@@ -10,13 +10,14 @@ import React from "react";
 const HomePage = () => (
   <>
     <SiteEffects />
+    
     <main className="relative z-10">
       <HeroSection />
       <AboutSection />
       <FeaturedProjects />
       <SkillsSection />
-      <HowIWork/>
-      <CTASection />
+      <HowIWork />
+      {/* <CTASection /> */}
     </main>
   </>
 );
