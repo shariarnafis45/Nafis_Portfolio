@@ -14,7 +14,7 @@ import HeroImage from "@/assets/nafis.png";
 
 const smoothEase = [0.22, 1, 0.36, 1];
 const curtainEase = [0.76, 0, 0.24, 1];
-const ROLE_INTERVAL = 4800; // ms between automatic role changes
+const ROLE_INTERVAL = 4800;
 const RESUME_URL =
   "https://drive.google.com/file/d/1ESjhsVWJoq0psdPGi9Fwp8XrFBs1e8PY/view?usp=sharing";
 const WORK_TARGET = "projects"; // id of the Featured Works section
@@ -192,7 +192,6 @@ const MaskLine = ({ children, className = "", delay = 0, reduce }) => (
   </span>
 );
 
-// Stacks every item in the same grid cell so height never jumps when the
 // active role changes. Only the active item is visible.
 const SwapStack = ({ items, active, prev, reduce, className = "" }) => (
   <div className={`grid ${className}`}>

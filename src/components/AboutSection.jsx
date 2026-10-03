@@ -1,347 +1,520 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { FiArrowUpRight, FiArrowDown, FiChevronRight } from "react-icons/fi";
 
-import { FaWordpress, FaCode, FaLayerGroup, FaRocket } from "react-icons/fa6";
-import { HiSparkles } from "react-icons/hi2";
-import { FiTerminal } from "react-icons/fi";
-
-// Replace with your actual assets path
-import AboutImage from "@/assets/nafis.png";
-import Icon from "../../public/logo.svg";
 import SectionBadge from "./shared/SectionBadge";
+import { useCurtainNav } from "./shared/CurtainNav";
 
 const smoothEase = [0.22, 1, 0.36, 1];
 
-const fadeUpVariants = {
-  hidden: { opacity: 0, y: 25 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: smoothEase },
-  },
-};
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
-  },
-};
+const ACCENT = "rgb(var(--fx,16,185,129))";
+const accentA = (a) => `rgba(var(--fx,16,185,129),${a})`;
 
-const JOURNEY = [
+const EMAIL = "mailto:nafisshahworkmail@gmail.com";
+const CONTACT_TARGET = "contact"; 
+const WORK_TARGET = "projects"; 
+
+
+const K = ({ children }) => <span className="text-purple-400">{children}</span>;
+const P = ({ children }) => <span className="text-sky-300">{children}</span>;
+const S = ({ children }) => (
+  <span className="text-emerald-300">{children}</span>
+);
+const N = ({ children }) => <span className="text-amber-300">{children}</span>;
+const D = ({ children }) => <span className="text-zinc-500">{children}</span>;
+const Ln = ({ i = 0, children }) => (
+  <div style={{ paddingLeft: `${i * 1.1}rem` }} className="break-words">
+    {children}
+  </div>
+);
+const Gap = () => <div className="h-3" />;
+
+const COMMITS = [
   {
-    year: "2024",
-    title: "Started with WordPress",
-    desc: "Began my web development journey with WordPress, building websites and learning the fundamentals.",
-    icon: <FaWordpress className="w-5 h-5 text-[#21759B]" />,
-  },
-  {
-    year: "Late 2024 - Early 2025",
-    title: "Exploring & Building",
-    desc: "Worked on multiple projects, improved my front-end skills and started learning modern web technologies.",
-    icon: <FaCode className="w-4 h-4 text-emerald-500" />,
-  },
-  {
-    year: "Mid 2025",
-    title: "MERN Stack Developer",
-    desc: "Mastered the MERN stack and started building full stack scalable web applications.",
-    icon: <FaLayerGroup className="w-4 h-4 text-blue-500" />,
-  },
-  {
-    year: "Now",
+    hash: "c9e41ab",
+    head: true,
+    when: "Now",
     title: "Building & Growing",
-    desc: "Continuously building impactful solutions, clean architectures and helping ideas become reality.",
-    icon: <FaRocket className="w-4 h-4 text-amber-500" />,
+    desc: "Continuously building impactful solutions and clean architectures.",
+  },
+  {
+    hash: "7d3b8a1",
+    when: "Mid 2025",
+    title: "MERN Stack Developer",
+    desc: "Mastered MERN and started building full stack scalable apps.",
+  },
+  {
+    hash: "4a02f6c",
+    when: "Late 2024 – Early 2025",
+    title: "Exploring & Building",
+    desc: "Multiple projects, stronger front-end, modern web tech.",
+  },
+  {
+    hash: "2b6d7e0",
+    when: "2024",
+    title: "Started with WordPress",
+    desc: "Building sites and learning the fundamentals.",
   },
 ];
 
-const CORE_FOCUS = [
-  "Scalable Systems",
-  "Clean Code Architecture",
-  "High Performance",
-  "Modern UI/UX",
+// Each command prints a list of lines. `ctx.go` is the curtain navigator.
+const COMMANDS = [
+  {
+    cmd: "cat about.ts",
+    label: "Who I am",
+    out: () => [
+      <Ln key="1">
+        <K>const</K> <P>developer</P> = {"{"}
+      </Ln>,
+      <Ln key="2" i={1}>
+        <P>name</P>: <S>{'"Shariar Nafis"'}</S>,
+      </Ln>,
+      <Ln key="3" i={1}>
+        <P>role</P>: <S>{'"Junior Full Stack Developer"'}</S>,
+      </Ln>,
+      <Ln key="4" i={1}>
+        <P>bridges</P>: [<S>{'"clean, user-centric UI"'}</S>,{" "}
+        <S>{'"high-concurrency backend systems"'}</S>],
+      </Ln>,
+      <Ln key="5" i={1}>
+        <P>startedWith</P>: <S>{'"CMS customization"'}</S>,
+      </Ln>,
+      <Ln key="6" i={1}>
+        <P>buildingNow</P>: <S>{'"production-grade MERN & Next.js apps"'}</S>,
+      </Ln>,
+      <Ln key="7" i={1}>
+        <P>mindset</P>: <S>{'"Clean & Scalable"'}</S>,
+      </Ln>,
+      <Ln key="8" i={1}>
+        <P>openToWork</P>: <N>true</N>,
+      </Ln>,
+      <Ln key="9">{"};"}</Ln>,
+    ],
+  },
+  {
+    cmd: "git log --oneline",
+    label: "My journey",
+    out: () =>
+      COMMITS.flatMap((c) => [
+        <Ln key={`${c.hash}-a`}>
+          <span className="text-amber-300">{c.hash}</span>{" "}
+          {c.head && <span className="text-sky-300">(HEAD → now) </span>}
+          <span className="text-zinc-100">{c.title}</span>
+        </Ln>,
+        <Ln key={`${c.hash}-b`} i={1}>
+          <D>
+            {c.when} · {c.desc}
+          </D>
+        </Ln>,
+      ]),
+  },
+  {
+    cmd: "cat stack.json",
+    label: "What I build with",
+    out: () => [
+      <Ln key="1">{"{"}</Ln>,
+      <Ln key="2" i={1}>
+        <P>&quot;frontend&quot;</P>: [<S>&quot;React&quot;</S>,{" "}
+        <S>&quot;Next.js&quot;</S>, <S>&quot;Tailwind CSS&quot;</S>,{" "}
+        <S>&quot;Framer Motion&quot;</S>],
+      </Ln>,
+      <Ln key="3" i={1}>
+        <P>&quot;backend&quot;</P>: [<S>&quot;Node.js&quot;</S>,{" "}
+        <S>&quot;Express&quot;</S>, <S>&quot;MongoDB&quot;</S>,{" "}
+        <S>&quot;REST APIs&quot;</S>],
+      </Ln>,
+      <Ln key="4" i={1}>
+        <P>&quot;cms&quot;</P>: [<S>&quot;WordPress&quot;</S>,{" "}
+        <S>&quot;Elementor&quot;</S>, <S>&quot;WooCommerce&quot;</S>]
+      </Ln>,
+      <Ln key="5">{"}"}</Ln>,
+    ],
+  },
+  {
+    cmd: "cat philosophy.md",
+    label: "How I think",
+    out: () => [
+      <Ln key="1">
+        <K># Engineering Philosophy</K>
+      </Ln>,
+      <Gap key="g1" />,
+      <Ln key="2">
+        <D>&gt;</D>{" "}
+        <span className="text-zinc-100">
+          I focus on building software where aesthetic frontend meets robust and
+          scalable architecture.
+        </span>
+      </Ln>,
+      <Gap key="g2" />,
+      <Ln key="3">
+        <N>-</N> Scalable systems
+      </Ln>,
+      <Ln key="4">
+        <N>-</N> Clean architecture
+      </Ln>,
+      <Ln key="5">
+        <N>-</N> High performance
+      </Ln>,
+      <Ln key="6">
+        <N>-</N> Modern UI/UX
+      </Ln>,
+    ],
+  },
+  {
+    cmd: "./hire-me.sh",
+    label: "Work with me",
+    out: ({ go }) => [
+      <Ln key="1">
+        <span className="text-emerald-400">✔</span> Checking availability…
+      </Ln>,
+      <Ln key="2">
+        <span className="text-emerald-400">✔</span> Status:{" "}
+        <span className="text-zinc-100">
+          open to junior roles &amp; freelance projects
+        </span>
+      </Ln>,
+      <Gap key="g1" />,
+      <Ln key="3">
+        <D># Have an idea or a role in mind? Let&rsquo;s build it properly.</D>
+      </Ln>,
+      <Gap key="g2" />,
+      <div key="4" className="flex flex-wrap gap-2">
+        <a
+          href={`#${CONTACT_TARGET}`}
+          onClick={go(CONTACT_TARGET, "Let’s Talk", EMAIL)}
+          data-cursor="Talk"
+          className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5"
+          style={{ backgroundColor: ACCENT }}
+        >
+          Let&rsquo;s talk <FiArrowUpRight className="h-3.5 w-3.5" />
+        </a>
+        <a
+          href={`#${WORK_TARGET}`}
+          onClick={go(WORK_TARGET, "Featured Works")}
+          data-cursor="View"
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-zinc-200 transition-transform duration-300 hover:-translate-y-0.5 hover:bg-white/10"
+        >
+          See my work <FiArrowDown className="h-3.5 w-3.5" />
+        </a>
+      </div>,
+    ],
+  },
 ];
+
+// terminal
+const Prompt = () => (
+  <span>
+    <span className="text-emerald-400">nafis</span>
+    <span className="text-zinc-500">@</span>
+    <span className="text-sky-400">portfolio</span>{" "}
+    <span className="text-zinc-500">~</span>{" "}
+    <span style={{ color: ACCENT }}>❯</span>{" "}
+  </span>
+);
+
+const Caret = ({ blink }) => (
+  <span
+    aria-hidden="true"
+    className={`ml-0.5 inline-block h-[1.05em] w-[0.55em] translate-y-[0.18em] ${
+      blink ? "animate-pulse motion-reduce:animate-none" : ""
+    }`}
+    style={{ backgroundColor: ACCENT }}
+  />
+);
 
 const AboutSection = () => {
+  const reduce = !!useReducedMotion();
+  const { go, curtain } = useCurtainNav();
+
+  const termRef = useRef(null);
+  const bodyRef = useRef(null);
+  const inView = useInView(termRef, { once: true, amount: 0.35 });
+  const started = useRef(false);
+
+  const [run, setRun] = useState({ idx: -1, id: 0 });
+  const [typed, setTyped] = useState("");
+  const [phase, setPhase] = useState("idle"); // idle | typing | output
+
+  const exec = (idx) => setRun((r) => ({ idx, id: r.id + 1 }));
+
+  
+  useEffect(() => {
+    if (inView && !started.current) {
+      started.current = true;
+      exec(0);
+    }
+  }, [inView]);
+
+
+  useEffect(() => {
+    if (run.idx < 0) return;
+    const full = COMMANDS[run.idx].cmd;
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+
+    if (reduce) {
+      setTyped(full);
+      setPhase("output");
+      return;
+    }
+
+    setTyped("");
+    setPhase("typing");
+    let i = 0;
+    let t;
+    const step = () => {
+      i += 1;
+      setTyped(full.slice(0, i));
+      if (i < full.length) {
+        t = setTimeout(step, 24 + Math.random() * 34);
+      } else {
+        t = setTimeout(() => setPhase("output"), 260);
+      }
+    };
+    t = setTimeout(step, 260);
+    return () => clearTimeout(t);
+  }, [run, reduce]);
+
+  const current = run.idx >= 0 ? COMMANDS[run.idx] : null;
+  const lines = current && phase === "output" ? current.out({ go }) : [];
+
   return (
     <section
       id="about"
-      className="relative py-20 lg:py-28 overflow-hidden bg-[#F8F9FA] dark:bg-[#0A0A0A] transition-colors duration-700 font-sans"
+      className="relative scroll-mt-24 py-20 lg:py-28 font-sans"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1.5px,transparent_1.5px)] dark:bg-[radial-gradient(#1f2937_1.5px,transparent_1.5px)] [background-size:28px_28px] opacity-60 pointer-events-none" />
-
-      <div className="max-w-[1240px] mx-auto px-5 sm:px-6 lg:px-8 w-full relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="lg:col-span-5 flex flex-col items-center lg:items-start"
-          >
-            {/* Background Circular Aura */}
-            <div className="relative w-full max-w-[380px] sm:max-w-[420px]">
-              <div className="absolute -top-10 -left-10 w-72 h-72 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-10 -right-10 w-72 h-72 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-
-              {/* Main Profile Frame */}
-              <motion.div
-                variants={fadeUpVariants}
-                className="relative z-10 w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-gradient-to-b from-gray-100 to-gray-200 dark:from-neutral-900 dark:to-neutral-950 ring-1 ring-black/5 dark:ring-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-black/60"
-              >
-                <Image
-                  src={AboutImage}
-                  alt="Shariar Nafis"
-                  fill
-                  className="object-cover object-top filter contrast-[1.03]"
-                  sizes="(max-width: 1024px) 100vw, 420px"
-                  priority
-                />
-              </motion.div>
-
-              {/* Status Badge  */}
-              <motion.div
-                variants={fadeUpVariants}
-                animate={{ y: [0, -6, 0] }}
-                transition={{
-                  duration: 4.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="absolute -top-5 -left-4 sm:-left-8 z-20 bg-white/95 dark:bg-[#121212]/95 px-4 py-3 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.08)] dark:shadow-black/60 border border-black/5 dark:border-white/10 backdrop-blur-xl"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-[#1F2937] dark:text-[#E5E7EB] leading-tight">
-                      Available for hire
-                    </span>
-                    <span className="text-[10px] text-[#6B7280] dark:text-[#9CA3AF]">
-                      new opportunities
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Senior IDE Snippet Box */}
-              <motion.div
-                variants={fadeUpVariants}
-                animate={{ y: [0, 6, 0] }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.5,
-                }}
-                className="absolute -bottom-10 -left-4 sm:-left-12 z-30 w-[270px] sm:w-[310px] rounded-2xl bg-white/90 dark:bg-[#0E0E10]/90 backdrop-blur-2xl border border-black/5 dark:border-white/10 shadow-[0_20px_45px_rgba(0,0,0,0.12)] dark:shadow-black/70 p-4"
-              >
-                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-black/[0.06] dark:border-white/[0.08]">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F56]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#27C93F]" />
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-gray-400 font-mono">
-                    <FiTerminal className="w-3 h-3" />
-                    <span>developer.ts</span>
-                  </div>
-                </div>
-                <div className="text-[11px] font-mono leading-[1.7] text-gray-800 dark:text-gray-200">
-                  <p>
-                    <span className="text-purple-600 dark:text-purple-400 font-semibold">
-                      const
-                    </span>{" "}
-                    <span className="text-blue-600 dark:text-blue-400">
-                      developer
-                    </span>{" "}
-                    = {"{"}
-                  </p>
-                  <p className="pl-3">
-                    name:{" "}
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      &apos;Shariar Nafis&apos;
-                    </span>
-                    ,
-                  </p>
-                  <p className="pl-3">
-                    role:{" "}
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      &apos;Full Stack Dev&apos;
-                    </span>
-                    ,
-                  </p>
-                  <p className="pl-3">
-                    stack: [
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      &apos;MERN&apos;
-                    </span>
-                    ,{" "}
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      &apos;Next.js&apos;
-                    </span>
-                    ],
-                  </p>
-                  <p className="pl-3">
-                    mindset:{" "}
-                    <span className="text-amber-600 dark:text-amber-400">
-                      &apos;Clean & Scalable&apos;
-                    </span>
-                  </p>
-                  <p>{"};"}</p>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Quote Card */}
+      <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 sm:px-6 lg:px-8 xl:pl-24 2xl:pl-8">
+        {/* header */}
+        <div className="mb-12 lg:mb-16 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div>
             <motion.div
-              variants={fadeUpVariants}
-              className="mt-16 sm:mt-20 w-full max-w-[380px] sm:max-w-[420px] bg-white dark:bg-[#121214] p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] dark:shadow-black/40 border border-black/5 dark:border-white/10 relative transition-transform hover:-translate-y-1 duration-300"
+              initial={reduce ? false : { opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: smoothEase }}
+              className="mb-6"
             >
-              <div className="flex items-start gap-4">
-                <span className="text-4xl leading-none text-black/20 dark:text-white/20 font-serif select-none">
-                  “
-                </span>
-                <div>
-                  <p className="text-sm font-medium text-[#4B5563] dark:text-[#9CA3AF] leading-relaxed mb-3">
-                    I focus on building software where aesthetic frontend meets
-                    robust and scalable architecture.
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-[2px] bg-emerald-500 rounded-full" />
-                    <span className="text-xs font-bold text-[#111827] dark:text-white tracking-wide uppercase">
-                      Engineering Philosophy
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Core Tech Radar Chips */}
-            <motion.div
-              variants={fadeUpVariants}
-              className="mt-4 w-full max-w-[380px] sm:max-w-[420px] flex flex-wrap gap-2 pt-2"
-            >
-              {CORE_FOCUS.map((item, idx) => (
-                <span
-                  key={idx}
-                  className="text-[11px] font-medium text-[#4B5563] dark:text-[#9CA3AF] bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.05] dark:border-white/[0.08] px-3 py-1 rounded-lg backdrop-blur-sm"
-                >
-                  {item}
-                </span>
-              ))}
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={staggerContainer}
-            className="lg:col-span-7 flex flex-col justify-center lg:pl-6"
-          >
-            {/* Header Badge */}
-            <motion.div variants={fadeUpVariants} className="mb-5">
               <SectionBadge title="About Me" />
             </motion.div>
 
-            {/* Section Headline */}
-            <motion.h2
-              variants={fadeUpVariants}
-              className="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold text-[#111827] dark:text-white leading-[1.18] tracking-tight mb-5"
-            >
-              Building Scalable Digital Products —{" "}
-              <span className="text-[#4B5563] dark:text-[#9CA3AF]">
-                The Nafix Standard.
+            <h2 className="text-[2.6rem] sm:text-6xl lg:text-[4.25rem] font-bold leading-[1.04] tracking-[-0.035em] text-[#0A0A0A] dark:text-white">
+              <span className="block overflow-hidden pb-[0.12em] -mb-[0.12em]">
+                <motion.span
+                  className="block"
+                  initial={reduce ? false : { y: "110%" }}
+                  whileInView={{ y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 1.1, ease: smoothEase, delay: 0.05 }}
+                >
+                  Pixels up front.
+                </motion.span>
               </span>
-            </motion.h2>
+              <span className="block overflow-hidden pb-[0.12em] -mb-[0.12em]">
+                <motion.span
+                  className="block"
+                  style={{ color: ACCENT }}
+                  initial={reduce ? false : { y: "110%" }}
+                  whileInView={{ y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 1.1, ease: smoothEase, delay: 0.2 }}
+                >
+                  Systems behind.
+                </motion.span>
+              </span>
+            </h2>
+          </div>
 
-            {/* Bio Body */}
-            <motion.p
-              variants={fadeUpVariants}
-              className="text-base sm:text-[1.05rem] text-[#4B5563] dark:text-[#9CA3AF] leading-relaxed mb-8"
-            >
-              I&rsquo;m{" "}
-              <strong className="text-[#111827] dark:text-white font-semibold">
-                Shariar Nafis
-              </strong>
-              , a Full Stack Developer who bridges the gap between clean
-              user-centric UI and high-concurrency backend systems. Starting
-              from CMS customization, I evolved into building production-grade
-              web applications utilizing the modern MERN & Next.js ecosystem.
-            </motion.p>
+          <motion.p
+            initial={reduce ? false : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: smoothEase, delay: 0.3 }}
+            className="max-w-sm text-base sm:text-lg leading-relaxed text-[#5F6368] dark:text-[#A0A0A0]"
+          >
+            Hit a command and get to know me, the way a developer would.
+          </motion.p>
+        </div>
 
-            {/* Timeline Card Container */}
-            <motion.div
-              variants={fadeUpVariants}
-              className="bg-white dark:bg-[#111113] border border-black/[0.07] dark:border-white/10 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_35px_rgba(0,0,0,0.03)] dark:shadow-black/40 relative transition-all duration-300 hover:shadow-[0_12px_45px_rgba(0,0,0,0.06)]"
-            >
-              {/* Card Header with Nafis Logo */}
-              <div className="flex items-center gap-3 mb-8 pb-5 border-b border-black/[0.06] dark:border-white/10">
-                <div className="relative w-6 h-6 flex items-center justify-center transition-transform hover:scale-110">
-                  <Image
-                    src={Icon}
-                    width={22}
-                    height={22}
-                    alt="Nafis Logo"
-                    className="invert dark:invert-0 object-contain"
-                  />
+        {/* Plain-text version for screen readers */}
+        <p className="sr-only">
+          Shariar Nafis is a Full Stack Developer who bridges clean,
+          user-centric UI and high-concurrency backend systems. He started with
+          CMS customization and now builds production-grade MERN and Next.js
+          applications. He is open to junior roles and freelance projects.
+        </p>
+
+        {/* ------------------------------- BODY ------------------------------- */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-6">
+          {/* Terminal */}
+          <motion.div
+            ref={termRef}
+            initial={reduce ? false : { opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.8, ease: smoothEase }}
+            className="relative lg:col-span-8"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-4 rounded-[2.5rem] opacity-70 blur-3xl"
+              style={{
+                background: `radial-gradient(60% 60% at 50% 35%, ${accentA(
+                  0.22,
+                )}, transparent)`,
+              }}
+            />
+
+            <div className="relative z-10 overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 bg-[#0B0B0D] shadow-[0_30px_60px_rgba(0,0,0,0.18)] dark:shadow-black/60">
+              {/* title bar */}
+              <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                <div className="flex gap-1.5" aria-hidden="true">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F56]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#FFBD2E]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#27C93F]" />
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-[0.18em] text-[#111827] dark:text-white">
-                  My Journey
-                </h3>
+                <span className="font-mono text-[11px] text-zinc-500">
+                  nafis — zsh
+                </span>
+                <span className="w-[42px]" aria-hidden="true" />
               </div>
 
-              {/* Timeline Items */}
-              <div className="relative">
-                {/* Continuous Connecting Line */}
-                <div className="absolute left-[19px] top-3 bottom-3 w-[2px] bg-black/[0.06] dark:bg-white/[0.08] rounded-full" />
+              {/* screen */}
+              <div
+                ref={bodyRef}
+                role="region"
+                aria-label="Interactive terminal"
+                className="h-[400px] sm:h-[430px] overflow-y-auto p-4 sm:p-6 font-mono text-[12px] sm:text-[13px] leading-[1.75] text-zinc-200 [scrollbar-width:thin]"
+              >
+                {!current && (
+                  <div>
+                    <Prompt />
+                    <Caret blink />
+                  </div>
+                )}
 
-                <div className="flex flex-col gap-8">
-                  {JOURNEY.map((item, index) => (
+                {current && (
+                  <div>
+                    <Prompt />
+                    <span className="text-zinc-100">{typed}</span>
+                    {phase === "typing" && <Caret />}
+                  </div>
+                )}
+
+                {phase === "output" && (
+                  <div aria-live="polite" className="mt-3 space-y-[1px]">
+                    {lines.map((ln, k) => (
+                      <motion.div
+                        key={`${run.id}-${k}`}
+                        initial={reduce ? false : { opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          duration: 0.35,
+                          ease: smoothEase,
+                          delay: k * 0.07,
+                        }}
+                      >
+                        {ln}
+                      </motion.div>
+                    ))}
+
                     <motion.div
-                      key={index}
-                      variants={fadeUpVariants}
-                      className="relative flex items-start group"
+                      className="pt-3"
+                      initial={reduce ? false : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: lines.length * 0.07 + 0.2 }}
                     >
-                      {/* Milestone Icon Node */}
-                      <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#161618] border-[3px] border-[#F8F9FA] dark:border-[#111113] shadow-sm transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-md flex-shrink-0">
-                        {item.icon}
-                      </div>
-
-                      {/* Content Grid (Guaranteed Pixel-Perfect Alignment) */}
-                      <div className="flex flex-col sm:grid sm:grid-cols-[140px_1fr] gap-2 sm:gap-6 w-full pl-5 pt-1">
-                        {/* Year Badge */}
-                        <div>
-                          <span className="inline-block text-[11px] font-bold text-[#1F2937] dark:text-[#E5E7EB] bg-black/[0.04] dark:bg-white/[0.08] px-3 py-1 rounded-full transition-colors group-hover:bg-black/[0.08] dark:group-hover:bg-white/15 whitespace-nowrap">
-                            {item.year}
-                          </span>
-                        </div>
-
-                        {/* Title & Description */}
-                        <div>
-                          <h4 className="text-sm sm:text-base font-bold text-[#111827] dark:text-white mb-1 transition-colors duration-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                            {item.title}
-                          </h4>
-                          <p className="text-xs sm:text-sm text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </div>
+                      <Prompt />
+                      <Caret blink />
+                      <span className="ml-3 text-zinc-600">
+                        # pick another command{" "}
+                        <span className="hidden lg:inline">→</span>
+                        <span className="lg:hidden">↓</span>
+                      </span>
                     </motion.div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
-            </motion.div>
+            </div>
           </motion.div>
+
+          {/* Command palette + CTAs */}
+          <div className="flex flex-col gap-6 lg:col-span-4 lg:justify-between">
+            <div>
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5F6368] dark:text-[#8A8A8A]">
+                Try a command
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                {COMMANDS.map((c, i) => {
+                  const on = i === run.idx;
+                  return (
+                    <motion.button
+                      key={c.cmd}
+                      type="button"
+                      onClick={() => exec(i)}
+                      data-cursor="Run"
+                      initial={reduce ? false : { opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{
+                        duration: 0.6,
+                        ease: smoothEase,
+                        delay: 0.05 * i,
+                      }}
+                      aria-pressed={on}
+                      className="group flex items-center justify-between gap-3 rounded-2xl border bg-white/75 dark:bg-white/[0.04] px-4 py-3.5 text-left transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:last:col-span-2 lg:last:col-span-1"
+                      style={{
+                        borderColor: on
+                          ? accentA(0.55)
+                          : "rgba(127,127,127,0.18)",
+                        backgroundColor: on ? accentA(0.08) : undefined,
+                      }}
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold tracking-tight text-[#0A0A0A] dark:text-white">
+                          {c.label}
+                        </span>
+                        <span className="mt-0.5 block truncate font-mono text-[11px] text-[#5F6368] dark:text-[#A0A0A0]">
+                          $ {c.cmd}
+                        </span>
+                      </span>
+                      <FiChevronRight
+                        className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5"
+                        style={{ color: on ? ACCENT : undefined }}
+                      />
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+              <a
+                href={`#${CONTACT_TARGET}`}
+                onClick={go(CONTACT_TARGET, "Let’s Talk", EMAIL)}
+                data-cursor="Talk"
+                className="group inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#0A0A0A] px-6 py-3.5 text-sm font-medium tracking-tight text-white transition-all duration-300 hover:-translate-y-0.5 hover:opacity-90 dark:bg-white dark:text-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+              >
+                Let&rsquo;s talk
+                <FiArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </a>
+              <a
+                href={`#${WORK_TARGET}`}
+                onClick={go(WORK_TARGET, "Featured Works")}
+                data-cursor="View"
+                className="group inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-black/[0.08] dark:border-white/10 bg-white/70 dark:bg-white/5 px-6 py-3.5 text-sm font-medium tracking-tight text-[#0A0A0A] dark:text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+              >
+                See my work
+                <FiArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Same curtain transition as the Hero */}
+      {curtain}
     </section>
   );
 };
