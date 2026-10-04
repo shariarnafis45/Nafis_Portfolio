@@ -6,6 +6,7 @@ import HowIWork from "@/components/HowIWorkSection";
 import SkillsSection from "@/components/SkillsSection";
 import SiteEffects from "@/components/ui/SiteEffects";
 import React from "react";
+import Contact from "../components/Contact";
 
 const HomePage = () => (
   <>
@@ -17,6 +18,7 @@ const HomePage = () => (
       <FeaturedProjects />
       <SkillsSection />
       <HowIWork />
+      <Contact/>
       {/* <CTASection /> */}
     </main>
   </>

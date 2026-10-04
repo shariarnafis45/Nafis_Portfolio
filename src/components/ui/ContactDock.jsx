@@ -19,13 +19,9 @@ import {
 
 import { useCurtainNav } from "../shared/CurtainNav";
 
-/* -------------------------------------------------------------------------- */
-/*  CONFIG                                                                    */
-/* -------------------------------------------------------------------------- */
 
 const smoothEase = [0.22, 1, 0.36, 1];
 
-// Role colour shared by the Hero (it sets --fx on <html>). Falls back to emerald.
 const ACCENT = "rgb(var(--fx,16,185,129))";
 const accentA = (a) => `rgba(var(--fx,16,185,129),${a})`;
 
@@ -84,7 +80,7 @@ export default function ContactDock() {
   const rootRef = useRef(null);
   const fabRef = useRef(null);
   const wasOpen = useRef(false);
-  const engaged = useRef(false); // once the visitor opens it, stop nudging
+  const engaged = useRef(false); 
   const seen = useRef(new Set());
   const copyTimer = useRef(null);
 
@@ -95,8 +91,8 @@ export default function ContactDock() {
   const [cardW, setCardW] = useState(320);
   const [copied, setCopied] = useState(false);
 
-  // Hide while the contact section / footer are on screen (they already have the actions)
-  const hidden = footerVisible || current === CONTACT_TARGET;
+
+  const hidden = footerVisible ;
 
   /* ---- card width follows the screen ---- */
   useEffect(() => {
