@@ -56,13 +56,24 @@ const PROJECTS = [
 
 const host = (url) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
+/* -------------------------------------------------------------------------- */
+/*  FEATURED PROJECTS                                                         */
+/* -------------------------------------------------------------------------- */
+
 export default function FeaturedProjects() {
   const reduce = !!useReducedMotion();
   const bodyRef = useRef(null);
   const inView = useInView(bodyRef, { amount: 0.25 });
 
+  // Watch the <h2> itself. Watching the line that is pushed out of its own
+  // overflow-hidden mask never fires once the title wraps onto several lines
+  // (phones), which is why the title stayed invisible on mobile.
+  const titleRef = useRef(null);
+  const titleInView = useInView(titleRef, { once: true, margin: "-60px" });
+  const titleShown = reduce || titleInView;
+
   const [active, setActive] = useState(0);
-  const [auto, setAuto] = useState(true);
+  const [auto, setAuto] = useState(true); // stops for good once the visitor picks one
   const [hovering, setHovering] = useState(false);
 
   const running = auto && inView && !hovering && !reduce;
@@ -93,7 +104,7 @@ export default function FeaturedProjects() {
       className="relative scroll-mt-24 py-20 lg:py-28 font-sans"
     >
       <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 sm:px-6 lg:px-8 xl:pl-24 2xl:pl-8">
-        {/* header */}
+        {/* ------------------------------ HEADER ------------------------------ */}
         <div className="mb-12 lg:mb-16 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <motion.div
@@ -106,13 +117,15 @@ export default function FeaturedProjects() {
               <SectionBadge title="Featured Works" />
             </motion.div>
 
-            <h2 className="text-[2.6rem] sm:text-6xl lg:text-[4.25rem] font-bold leading-[1.04] tracking-[-0.035em] text-[#0A0A0A] dark:text-white">
+            <h2
+              ref={titleRef}
+              className="text-[2.6rem] sm:text-6xl lg:text-[4.25rem] font-bold leading-[1.04] tracking-[-0.035em] text-[#0A0A0A] dark:text-white"
+            >
               <span className="block overflow-hidden pb-[0.12em] -mb-[0.12em]">
                 <motion.span
                   className="block"
                   initial={reduce ? false : { y: "110%" }}
-                  whileInView={{ y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
+                  animate={{ y: titleShown ? 0 : "110%" }}
                   transition={{ duration: 1.1, ease: smoothEase, delay: 0.05 }}
                 >
                   Shipped, not sketched.
@@ -123,8 +136,7 @@ export default function FeaturedProjects() {
                   className="block"
                   style={{ color: ACCENT }}
                   initial={reduce ? false : { y: "110%" }}
-                  whileInView={{ y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
+                  animate={{ y: titleShown ? 0 : "110%" }}
                   transition={{ duration: 1.1, ease: smoothEase, delay: 0.2 }}
                 >
                   Live and clickable.
@@ -145,7 +157,7 @@ export default function FeaturedProjects() {
           </motion.p>
         </div>
 
-        {/* body */}
+        {/* ------------------------------- BODY ------------------------------- */}
         <div
           ref={bodyRef}
           onPointerEnter={mouseOnly(() => setHovering(true))}
