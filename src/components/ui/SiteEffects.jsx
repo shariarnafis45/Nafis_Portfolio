@@ -13,6 +13,21 @@ const S = 32,
   R = 190,
   TAU = Math.PI * 2;
 
+const FALLBACK = [16, 185, 129];
+
+/* Pick the text color (near-black or white) with the better WCAG contrast
+   on top of the accent. Returned as "r,g,b" for use in rgb(var(--fx-ink)). */
+const inkFor = ([r, g, b]) => {
+  const lin = (c) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  const onWhite = 1.05 / (L + 0.05);
+  const onDark = (L + 0.05) / (0.00303 + 0.05); // #0A0A0A
+  return onDark >= onWhite ? "10,10,10" : "255,255,255";
+};
+
 export default function SiteEffects() {
   const reduce = !!useReducedMotion();
   const canvasRef = useRef(null);
@@ -31,15 +46,31 @@ export default function SiteEffects() {
 
     let w = 0,
       h = 0,
-      raf = 0;
+      raf = 0,
+      frame = 0;
     let dark = root.classList.contains("dark");
     const pointer = { x: -999, y: -999, inside: false };
     const cur = { x: -999, y: -999, energy: 0, r: 16, g: 185, b: 129 };
 
-    // Hero role colour comes in through the --fx CSS variable ("r,g,b")
-    const readColor = () => {
+    /* Hero role colour arrives through --fx ("r,g,b"). Read it only when it
+       can change (mount, attribute change, slow poll), not every frame, and
+       publish a matching --fx-ink for text that sits on the accent. */
+    let lastFx = null;
+    let fx = FALLBACK;
+    const syncColor = () => {
       const v = getComputedStyle(root).getPropertyValue("--fx").trim();
-      return v ? v.split(",").map(Number) : [16, 185, 129];
+      if (v !== lastFx) {
+        lastFx = v;
+        const parts = v.split(",").map((n) => Number(n));
+        fx =
+          parts.length === 3 && parts.every((n) => Number.isFinite(n))
+            ? parts
+            : FALLBACK;
+      }
+      const ink = inkFor(fx);
+      if (root.style.getPropertyValue("--fx-ink") !== ink) {
+        root.style.setProperty("--fx-ink", ink);
+      }
     };
 
     const draw = () => {
@@ -101,13 +132,13 @@ export default function SiteEffects() {
         cur.x = pointer.x;
         cur.y = pointer.y;
       }
+      if (frame++ % 20 === 0) syncColor();
       cur.x += (pointer.x - cur.x) * 0.2;
       cur.y += (pointer.y - cur.y) * 0.2;
       cur.energy += ((pointer.inside ? 1 : 0) - cur.energy) * 0.09;
-      const [tr, tg, tb] = readColor();
-      cur.r += (tr - cur.r) * 0.08;
-      cur.g += (tg - cur.g) * 0.08;
-      cur.b += (tb - cur.b) * 0.08;
+      cur.r += (fx[0] - cur.r) * 0.08;
+      cur.g += (fx[1] - cur.g) * 0.08;
+      cur.b += (fx[2] - cur.b) * 0.08;
       draw();
       if (pointer.inside || cur.energy > 0.01)
         raf = requestAnimationFrame(tick);
@@ -150,9 +181,20 @@ export default function SiteEffects() {
 
     const mo = new MutationObserver(() => {
       dark = root.classList.contains("dark");
+      syncColor();
       draw();
     });
-    mo.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mo.observe(root, { attributes: true, attributeFilter: ["class", "style"] });
+
+    /* Safety net if --fx changes through a path the observer can't see. */
+    const poll = setInterval(() => {
+      if (!document.hidden) syncColor();
+    }, 1000);
+
+    syncColor();
+    cur.r = fx[0];
+    cur.g = fx[1];
+    cur.b = fx[2];
 
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", onMove, { passive: true });
@@ -161,6 +203,7 @@ export default function SiteEffects() {
 
     return () => {
       cancelAnimationFrame(raf);
+      clearInterval(poll);
       mo.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onMove);
@@ -188,11 +231,12 @@ export default function SiteEffects() {
               opacity: ring.show ? 1 : 0,
               backgroundColor: `rgba(var(--fx, 16,185,129), ${ring.label ? 0.92 : 0.06})`,
               borderColor: `rgba(var(--fx, 16,185,129), ${ring.label ? 0 : 0.7})`,
+              color: "rgb(var(--fx-ink, 10,10,10))",
             }}
             className="-translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full border-[1.5px] transition-[width,height,opacity,background-color,border-color] duration-500 ease-out"
           >
             {ring.label && (
-              <span className="text-[11px] font-semibold tracking-tight text-white">
+              <span className="text-xs font-semibold tracking-tight">
                 {ring.label}
               </span>
             )}

@@ -18,24 +18,43 @@ const smoothEase = [0.22, 1, 0.36, 1];
 const ACCENT = "rgb(var(--fx,16,185,129))";
 const accentA = (a) => `rgba(var(--fx,16,185,129),${a})`;
 
+/* One focus style for every control: visible on light and dark (>= 3:1). */
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f7f5] dark:focus-visible:ring-emerald-400 dark:focus-visible:ring-offset-[#0A0A0A]";
+
+/* Ring drawn on a wrapper when any control inside it has keyboard focus. */
+const FOCUS_WITHIN =
+  "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-600 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-[#f7f7f5] dark:has-[:focus-visible]:ring-emerald-400 dark:has-[:focus-visible]:ring-offset-[#0A0A0A]";
+
 const EMAIL = "mailto:nafisshahworkmail@gmail.com";
-const NAV = [
+
+/*
+  Section registry. Keep the order identical to the page order.
+  Education is reserved: set `enabled: true` once <section id="education">
+  exists on the page. Nothing else in this file needs to change.
+*/
+const NAV_ITEMS = [
   { id: "home", name: "Home", label: "Back to Top" },
   { id: "about", name: "About", label: "About Me" },
   { id: "projects", name: "Projects", label: "Featured Works" },
   { id: "skills", name: "Skills", label: "My Expertise" },
+  { id: "education", name: "Education", label: "Education", enabled: false },
   { id: "process", name: "Process", label: "How I Work" },
-  { id: "contact", name: "Contact", label: "Let’s Talk", fallback: EMAIL },
+  { id: "contact", name: "Contact", label: "Let’s talk", fallback: EMAIL },
 ];
+const NAV = NAV_ITEMS.filter((n) => n.enabled !== false);
 
 const pad = (n) => String(n).padStart(2, "0");
 
 const NavBar = () => {
   const reduce = !!useReducedMotion();
+  const dur = (s) => (reduce ? 0 : s);
   const { go, curtain } = useCurtainNav();
-  const { scrollY, scrollYProgress } = useScroll();
+  const { scrollY } = useScroll();
 
   const wrapRef = useRef(null);
+  const toggleRef = useRef(null);
+  const holdRef = useRef(0); /* header stays visible until this timestamp */
 
   const [active, setActive] = useState("home");
   const [hover, setHover] = useState(null);
@@ -49,6 +68,10 @@ const NavBar = () => {
   );
   const activeItem = NAV[activeIndex];
   const pillTarget = hover ?? active;
+  const talk = NAV.find((n) => n.id === "contact") ?? NAV[NAV.length - 1];
+
+  /* Active section: observer for the middle of the viewport, plus a
+     bottom-of-page check so a short last section can still become active. */
   useEffect(() => {
     const els = NAV.map((n) => document.getElementById(n.id)).filter(Boolean);
     if (!els.length) return;
@@ -60,12 +83,28 @@ const NavBar = () => {
       { rootMargin: "-45% 0px -45% 0px" },
     );
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+
+    const onScroll = () => {
+      const atBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 4;
+      if (atBottom) setActive(NAV[NAV.length - 1].id);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const prev = scrollY.getPrevious() ?? 0;
     setScrolled(latest > 20);
+    if (performance.now() < holdRef.current) {
+      setHidden(false);
+      return;
+    }
     if (menuOpen || latest < 120) {
       setHidden(false);
     } else if (latest > prev && latest > 260) {
@@ -74,6 +113,8 @@ const NavBar = () => {
       setHidden(false);
     }
   });
+
+  /* Menu: outside click and Escape close it; Escape returns focus to the button. */
   useEffect(() => {
     if (!menuOpen) return;
     const onDown = (e) => {
@@ -81,7 +122,10 @@ const NavBar = () => {
         setMenuOpen(false);
     };
     const onKey = (e) => {
-      if (e.key === "Escape") setMenuOpen(false);
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        toggleRef.current?.focus();
+      }
     };
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
@@ -91,56 +135,64 @@ const NavBar = () => {
     };
   }, [menuOpen]);
 
+  /* Keyboard users tabbing out of the open menu close it. */
+  const onWrapBlur = (e) => {
+    if (
+      menuOpen &&
+      e.relatedTarget &&
+      wrapRef.current &&
+      !wrapRef.current.contains(e.relatedTarget)
+    ) {
+      setMenuOpen(false);
+    }
+  };
+
   const jump = (item) => (e) => {
+    holdRef.current = performance.now() + 2600; /* covers the curtain wipe */
     setActive(item.id);
     setMenuOpen(false);
     go(item.id, item.label, item.fallback)(e);
   };
-
-  const talk = NAV[NAV.length - 1];
 
   return (
     <>
       <motion.header
         initial={false}
         animate={{ y: hidden && !menuOpen ? "-140%" : "0%" }}
-        transition={{ duration: reduce ? 0 : 0.5, ease: smoothEase }}
+        transition={{ duration: dur(0.5), ease: smoothEase }}
         onFocusCapture={() => setHidden(false)}
-        className="fixed inset-x-0 top-0 z-50 px-4 pb-4 pt-4 sm:px-6 sm:pt-6 md:px-8"
+        className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4 pb-4 pt-4 sm:px-6 sm:pt-6 md:px-8"
       >
-        <div ref={wrapRef} className="relative mx-auto max-w-[1200px]">
+        <div
+          ref={wrapRef}
+          onBlur={onWrapBlur}
+          className="pointer-events-auto relative mx-auto max-w-[1200px]"
+        >
           <nav
             aria-label="Main"
-            className={`relative flex items-center justify-between gap-3 overflow-hidden rounded-full border border-white/50 dark:border-white/10 bg-white/80 dark:bg-[#0A0A0A]/80 px-3 py-2.5 backdrop-blur-2xl transition-shadow duration-500 sm:px-5 lg:px-6 ${
+            className={`relative flex items-center justify-between gap-3 rounded-full border border-black/[0.06] bg-white/80 px-3 py-2.5 backdrop-blur-2xl transition-shadow duration-500 dark:border-white/10 dark:bg-[#0A0A0A]/80 sm:px-5 lg:px-6 ${
               scrolled
                 ? "shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-black/60"
                 : "shadow-[0_4px_24px_rgba(0,0,0,0.02)] dark:shadow-transparent"
             }`}
           >
-            {/* scroll progress */}
-            <motion.span
-              aria-hidden="true"
-              className="absolute inset-x-0 bottom-0 h-[2px] origin-left"
-              style={{ scaleX: scrollYProgress, backgroundColor: ACCENT }}
-            />
-
             {/* logo */}
             <div className="flex flex-1 items-center justify-start">
               <a
                 href="#home"
                 onClick={jump(NAV[0])}
                 data-cursor="Top"
-                aria-label="Back to top"
-                className="flex items-center rounded-md transition-transform duration-300 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                aria-label="Shariar Nafis, back to top"
+                className={`flex items-center rounded-md transition-transform duration-300 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100 ${FOCUS}`}
               >
                 <Logo />
               </a>
             </div>
 
-            {/* desktop links with a sliding pill */}
+            {/* desktop links: sliding hover pill, persistent active dot */}
             <ul
               onPointerLeave={() => setHover(null)}
-              className="hidden shrink-0 items-center justify-center gap-1 lg:flex"
+              className="hidden shrink-0 items-center justify-center gap-0.5 lg:flex xl:gap-1"
             >
               {NAV.map((n) => {
                 const isActive = active === n.id;
@@ -156,11 +208,11 @@ const NavBar = () => {
                       <motion.span
                         layoutId="nav-pill"
                         aria-hidden="true"
-                        transition={{
-                          type: "spring",
-                          stiffness: 420,
-                          damping: 34,
-                        }}
+                        transition={
+                          reduce
+                            ? { duration: 0 }
+                            : { type: "spring", stiffness: 420, damping: 34 }
+                        }
                         className="absolute inset-0 rounded-full"
                         style={{ backgroundColor: accentA(0.12) }}
                       />
@@ -168,34 +220,43 @@ const NavBar = () => {
                     <a
                       href={`#${n.id}`}
                       onClick={jump(n)}
-                      aria-current={isActive ? "page" : undefined}
+                      aria-current={isActive ? "location" : undefined}
                       data-cursor="Go"
-                      className={`relative block select-none rounded-full px-4 py-2 text-[15px] tracking-tight transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
+                      className={`relative block select-none rounded-full px-3.5 py-2 text-[15px] font-medium tracking-tight transition-colors duration-200 motion-reduce:transition-none xl:px-4 ${FOCUS} ${
                         isActive
-                          ? "font-semibold text-[#0A0A0A] dark:text-white"
-                          : "font-medium text-[#5F6368] dark:text-[#8A8A8A] hover:text-[#0A0A0A] dark:hover:text-white"
+                          ? "text-[#0A0A0A] dark:text-white"
+                          : "text-[#5F6368] hover:text-[#0A0A0A] dark:text-[#8A8A8A] dark:hover:text-white"
                       }`}
                     >
                       {n.name}
                     </a>
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full"
+                        style={{ backgroundColor: ACCENT }}
+                      />
+                    )}
                   </li>
                 );
               })}
             </ul>
 
-            {/* tablet: shows where you are, since the links are tucked in the menu */}
-            <div className="hidden flex-shrink-0 items-center justify-center md:flex lg:hidden">
+            {/* tablet: shows where you are, since the links live in the menu */}
+            <div
+              aria-hidden="true"
+              className="hidden flex-shrink-0 items-center justify-center md:flex lg:hidden"
+            >
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
                   key={active}
                   initial={reduce ? false : { opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.25, ease: smoothEase }}
-                  className="inline-flex items-center gap-2 rounded-full border border-black/[0.07] dark:border-white/10 px-4 py-1.5 font-mono text-xs font-medium text-[#0A0A0A] dark:text-white"
+                  transition={{ duration: dur(0.25), ease: smoothEase }}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/[0.07] px-4 py-1.5 font-mono text-xs font-medium text-[#0A0A0A] dark:border-white/10 dark:text-white"
                 >
                   <span
-                    aria-hidden="true"
                     className="h-1.5 w-1.5 rounded-full"
                     style={{ backgroundColor: ACCENT }}
                   />
@@ -204,20 +265,20 @@ const NavBar = () => {
               </AnimatePresence>
             </div>
 
-            {/* actions: ONE theme switch for every screen size */}
+            {/* actions: one primary CTA, one theme switch, one menu button */}
             <div className="flex flex-1 items-center justify-end gap-2.5 sm:gap-3">
               <a
                 href={`#${talk.id}`}
                 onClick={jump(talk)}
                 data-cursor="Talk"
-                className="group hidden items-center justify-center gap-2.5 rounded-full bg-[#0A0A0A] px-6 py-3 text-[15px] font-medium tracking-tight text-white transition-all duration-300 hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] dark:bg-white dark:text-[#0A0A0A] md:inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                className={`group hidden h-11 items-center justify-center gap-2.5 rounded-full bg-[#0A0A0A] px-5 text-[15px] font-medium tracking-tight text-white transition-all duration-300 hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 dark:bg-white dark:text-[#0A0A0A] md:inline-flex ${FOCUS}`}
               >
-                <span>Let&rsquo;s Talk</span>
+                <span>Let&rsquo;s talk</span>
                 <svg
                   viewBox="0 0 16 16"
                   fill="none"
                   aria-hidden="true"
-                  className="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1"
+                  className="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                 >
                   <path
                     d="M3.33331 8H12.6666M12.6666 8L8 3.33334M12.6666 8L8 12.6667"
@@ -229,31 +290,34 @@ const NavBar = () => {
                 </svg>
               </a>
 
-              <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm backdrop-blur-md transition-transform hover:scale-105 sm:h-11 sm:w-11">
+              <div
+                className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-black/[0.08] bg-white shadow-sm backdrop-blur-md transition-transform hover:scale-105 motion-reduce:transition-none motion-reduce:hover:scale-100 dark:border-white/10 dark:bg-white/5 ${FOCUS_WITHIN}`}
+              >
                 <ThemeSwitch />
               </div>
 
               <button
+                ref={toggleRef}
                 type="button"
                 onClick={() => setMenuOpen((o) => !o)}
-                aria-label="Toggle navigation menu"
+                aria-label="Main menu"
                 aria-expanded={menuOpen}
-                aria-controls="mobile-nav"
-                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-black/5 text-[#0A0A0A] transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                aria-controls={menuOpen ? "mobile-nav" : undefined}
+                className={`relative flex h-11 w-11 items-center justify-center rounded-full bg-black/5 text-[#0A0A0A] transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 lg:hidden ${FOCUS}`}
               >
                 <div className="relative flex h-4 w-4 flex-col items-center justify-center">
                   <span
-                    className={`absolute h-[1.5px] w-full rounded-full bg-current transition-all duration-300 ease-out ${
+                    className={`absolute h-[1.5px] w-full rounded-full bg-current transition-all duration-300 ease-out motion-reduce:transition-none ${
                       menuOpen ? "translate-y-0 rotate-45" : "-translate-y-1.5"
                     }`}
                   />
                   <span
-                    className={`absolute h-[1.5px] w-full rounded-full bg-current transition-all duration-300 ease-out ${
+                    className={`absolute h-[1.5px] w-full rounded-full bg-current transition-all duration-300 ease-out motion-reduce:transition-none ${
                       menuOpen ? "scale-50 opacity-0" : "scale-100 opacity-100"
                     }`}
                   />
                   <span
-                    className={`absolute h-[1.5px] w-full rounded-full bg-current transition-all duration-300 ease-out ${
+                    className={`absolute h-[1.5px] w-full rounded-full bg-current transition-all duration-300 ease-out motion-reduce:transition-none ${
                       menuOpen ? "translate-y-0 -rotate-45" : "translate-y-1.5"
                     }`}
                   />
@@ -262,21 +326,22 @@ const NavBar = () => {
             </div>
           </nav>
 
-          {/* mobile / tablet menu: numbered links */}
+          {/* mobile / tablet menu */}
           <AnimatePresence>
             {menuOpen && (
-              <motion.div
+              <motion.nav
                 id="mobile-nav"
+                aria-label="Mobile"
                 initial={reduce ? false : { opacity: 0, y: -10, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{
                   opacity: 0,
                   y: -8,
                   scale: 0.97,
-                  transition: { duration: 0.18 },
+                  transition: { duration: dur(0.18) },
                 }}
-                transition={{ duration: 0.35, ease: smoothEase }}
-                className="absolute left-0 right-0 top-full mt-3 origin-top rounded-3xl border border-white/80 dark:border-white/10 bg-white/90 dark:bg-[#0A0A0A]/90 p-3 shadow-xl shadow-black/[0.06] backdrop-blur-2xl dark:shadow-black/60 lg:hidden"
+                transition={{ duration: dur(0.35), ease: smoothEase }}
+                className="absolute left-0 right-0 top-full mt-3 max-h-[calc(100dvh-7rem)] origin-top overflow-y-auto overscroll-contain rounded-3xl border border-black/[0.06] bg-white/90 p-3 shadow-xl shadow-black/[0.06] backdrop-blur-2xl dark:border-white/10 dark:bg-[#0A0A0A]/90 dark:shadow-black/60 lg:hidden"
               >
                 <ul className="flex flex-col gap-1">
                   {NAV.map((n, i) => {
@@ -287,16 +352,16 @@ const NavBar = () => {
                         initial={reduce ? false : { opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
-                          duration: 0.4,
+                          duration: dur(0.4),
                           ease: smoothEase,
-                          delay: 0.05 + i * 0.045,
+                          delay: reduce ? 0 : 0.05 + i * 0.045,
                         }}
                       >
                         <a
                           href={`#${n.id}`}
                           onClick={jump(n)}
-                          aria-current={isActive ? "page" : undefined}
-                          className={`flex items-center justify-between rounded-2xl px-4 py-3.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
+                          aria-current={isActive ? "location" : undefined}
+                          className={`flex min-h-12 items-center justify-between rounded-2xl px-4 py-3 transition-colors duration-200 motion-reduce:transition-none ${FOCUS} ${
                             isActive
                               ? "text-[#0A0A0A] dark:text-white"
                               : "text-[#5F6368] hover:bg-black/5 hover:text-[#0A0A0A] dark:text-[#8A8A8A] dark:hover:bg-white/5 dark:hover:text-white"
@@ -309,8 +374,12 @@ const NavBar = () => {
                         >
                           <span className="flex items-center gap-4">
                             <span
-                              className="w-6 font-mono text-xs font-semibold"
-                              style={{ color: isActive ? ACCENT : "#8A8A8A" }}
+                              aria-hidden="true"
+                              className={`w-6 font-mono text-xs font-semibold ${
+                                isActive
+                                  ? "text-[#0A0A0A] dark:text-white"
+                                  : "text-[#6B7280] dark:text-[#8A8A8A]"
+                              }`}
                             >
                               {pad(i + 1)}
                             </span>
@@ -335,13 +404,13 @@ const NavBar = () => {
                   })}
                 </ul>
 
-                <div className="mt-3 border-t border-black/[0.05] pt-3 dark:border-white/[0.08] md:hidden">
+                <div className="mt-3 border-t border-black/[0.06] pt-3 dark:border-white/[0.08] md:hidden">
                   <a
                     href={`#${talk.id}`}
                     onClick={jump(talk)}
-                    className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#0A0A0A] py-3.5 text-[15px] font-medium tracking-tight text-white transition-transform active:scale-[0.98] dark:bg-white dark:text-[#0A0A0A]"
+                    className={`flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#0A0A0A] text-[15px] font-medium tracking-tight text-white transition-transform active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 dark:bg-white dark:text-[#0A0A0A] ${FOCUS}`}
                   >
-                    <span>Let&rsquo;s Talk</span>
+                    <span>Let&rsquo;s talk</span>
                     <svg
                       aria-hidden="true"
                       className="h-4 w-4"
@@ -358,7 +427,7 @@ const NavBar = () => {
                     </svg>
                   </a>
                 </div>
-              </motion.div>
+              </motion.nav>
             )}
           </AnimatePresence>
         </div>
