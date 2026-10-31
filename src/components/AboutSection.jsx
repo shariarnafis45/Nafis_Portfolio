@@ -6,17 +6,23 @@ import { FiArrowUpRight, FiArrowDown, FiChevronRight } from "react-icons/fi";
 
 import SectionBadge from "./shared/SectionBadge";
 import { useCurtainNav } from "./shared/CurtainNav";
+import {
+  ACCENT,
+  CTA,
+  FOCUS,
+  INK,
+  MAILTO,
+  SITE,
+  accentA,
+  smoothEase,
+} from "@/lib/site";
 
-const smoothEase = [0.22, 1, 0.36, 1];
+const CONTACT_TARGET = "contact";
+const WORK_TARGET = "projects";
 
-
-const ACCENT = "rgb(var(--fx,16,185,129))";
-const accentA = (a) => `rgba(var(--fx,16,185,129),${a})`;
-
-const EMAIL = "mailto:nafisshahworkmail@gmail.com";
-const CONTACT_TARGET = "contact"; 
-const WORK_TARGET = "projects"; 
-
+/* Focus ring for controls that sit on the always-dark terminal. */
+const TERM_FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0B0D]";
 
 const K = ({ children }) => <span className="text-purple-400">{children}</span>;
 const P = ({ children }) => <span className="text-sky-300">{children}</span>;
@@ -24,7 +30,7 @@ const S = ({ children }) => (
   <span className="text-emerald-300">{children}</span>
 );
 const N = ({ children }) => <span className="text-amber-300">{children}</span>;
-const D = ({ children }) => <span className="text-zinc-500">{children}</span>;
+const D = ({ children }) => <span className="text-zinc-400">{children}</span>;
 const Ln = ({ i = 0, children }) => (
   <div style={{ paddingLeft: `${i * 1.1}rem` }} className="break-words">
     {children}
@@ -38,13 +44,13 @@ const COMMITS = [
     head: true,
     when: "Now",
     title: "Building & Growing",
-    desc: "Continuously building impactful solutions and clean architectures.",
+    desc: "Building full stack projects and refining my craft.",
   },
   {
     hash: "7d3b8a1",
     when: "Mid 2025",
     title: "MERN Stack Developer",
-    desc: "Mastered MERN and started building full stack scalable apps.",
+    desc: "Learned the MERN stack and started building full stack apps.",
   },
   {
     hash: "4a02f6c",
@@ -70,23 +76,23 @@ const COMMANDS = [
         <K>const</K> <P>developer</P> = {"{"}
       </Ln>,
       <Ln key="2" i={1}>
-        <P>name</P>: <S>{'"Shariar Nafis"'}</S>,
+        <P>name</P>: <S>{`"${SITE.name}"`}</S>,
       </Ln>,
       <Ln key="3" i={1}>
-        <P>role</P>: <S>{'"Junior Full Stack Developer"'}</S>,
+        <P>role</P>: <S>{`"${SITE.role}"`}</S>,
       </Ln>,
       <Ln key="4" i={1}>
-        <P>bridges</P>: [<S>{'"clean, user-centric UI"'}</S>,{" "}
-        <S>{'"high-concurrency backend systems"'}</S>],
+        <P>bridges</P>: [<S>{'"clean, user-focused UI"'}</S>,{" "}
+        <S>{'"APIs and databases"'}</S>],
       </Ln>,
       <Ln key="5" i={1}>
         <P>startedWith</P>: <S>{'"CMS customization"'}</S>,
       </Ln>,
       <Ln key="6" i={1}>
-        <P>buildingNow</P>: <S>{'"production-grade MERN & Next.js apps"'}</S>,
+        <P>buildingNow</P>: <S>{'"full stack MERN & Next.js apps"'}</S>,
       </Ln>,
       <Ln key="7" i={1}>
-        <P>mindset</P>: <S>{'"Clean & Scalable"'}</S>,
+        <P>mindset</P>: <S>{'"Clean & maintainable"'}</S>,
       </Ln>,
       <Ln key="8" i={1}>
         <P>openToWork</P>: <N>true</N>,
@@ -144,22 +150,22 @@ const COMMANDS = [
       <Ln key="2">
         <D>&gt;</D>{" "}
         <span className="text-zinc-100">
-          I focus on building software where aesthetic frontend meets robust and
-          scalable architecture.
+          I like software where a polished frontend sits on a solid,
+          maintainable backend.
         </span>
       </Ln>,
       <Gap key="g2" />,
       <Ln key="3">
-        <N>-</N> Scalable systems
+        <N>-</N> Clean, readable code
       </Ln>,
       <Ln key="4">
-        <N>-</N> Clean architecture
+        <N>-</N> Simple, maintainable architecture
       </Ln>,
       <Ln key="5">
-        <N>-</N> High performance
+        <N>-</N> Performance-minded
       </Ln>,
       <Ln key="6">
-        <N>-</N> Modern UI/UX
+        <N>-</N> Modern, accessible UI
       </Ln>,
     ],
   },
@@ -184,20 +190,21 @@ const COMMANDS = [
       <div key="4" className="flex flex-wrap gap-2">
         <a
           href={`#${CONTACT_TARGET}`}
-          onClick={go(CONTACT_TARGET, "Let’s Talk", EMAIL)}
+          onClick={go(CONTACT_TARGET, CTA.talk, MAILTO)}
           data-cursor="Talk"
-          className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold text-white transition-transform duration-300 hover:-translate-y-0.5"
-          style={{ backgroundColor: ACCENT }}
+          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-transform duration-300 hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${TERM_FOCUS}`}
+          style={{ backgroundColor: ACCENT, color: INK }}
         >
-          Let&rsquo;s talk <FiArrowUpRight className="h-3.5 w-3.5" />
+          {CTA.talk}{" "}
+          <FiArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
         </a>
         <a
           href={`#${WORK_TARGET}`}
           onClick={go(WORK_TARGET, "Featured Works")}
           data-cursor="View"
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-zinc-200 transition-transform duration-300 hover:-translate-y-0.5 hover:bg-white/10"
+          className={`inline-flex items-center gap-1.5 rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-zinc-200 transition-transform duration-300 hover:-translate-y-0.5 hover:bg-white/10 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${TERM_FOCUS}`}
         >
-          See my work <FiArrowDown className="h-3.5 w-3.5" />
+          See my work <FiArrowDown aria-hidden="true" className="h-3.5 w-3.5" />
         </a>
       </div>,
     ],
@@ -211,17 +218,21 @@ const Prompt = () => (
     <span className="text-zinc-500">@</span>
     <span className="text-sky-400">portfolio</span>{" "}
     <span className="text-zinc-500">~</span>{" "}
-    <span style={{ color: ACCENT }}>❯</span>{" "}
+    <span aria-hidden="true" style={{ color: ACCENT }}>
+      ❯
+    </span>{" "}
   </span>
 );
 
-const Caret = ({ blink }) => (
+/* Blinks five times, then stays solid (WCAG 2.2.2: nothing blinks for > 5s). */
+const Caret = ({ blink, reduce }) => (
   <span
     aria-hidden="true"
-    className={`ml-0.5 inline-block h-[1.05em] w-[0.55em] translate-y-[0.18em] ${
-      blink ? "animate-pulse motion-reduce:animate-none" : ""
-    }`}
-    style={{ backgroundColor: ACCENT }}
+    className="ml-0.5 inline-block h-[1.05em] w-[0.55em] translate-y-[0.18em]"
+    style={{
+      backgroundColor: ACCENT,
+      animation: blink && !reduce ? "about-caret 1.1s ease-in-out 5" : "none",
+    }}
   />
 );
 
@@ -240,7 +251,7 @@ const AboutSection = () => {
 
   const exec = (idx) => setRun((r) => ({ idx, id: r.id + 1 }));
 
-  
+  // First command runs by itself once the terminal scrolls into view.
   useEffect(() => {
     if (inView && !started.current) {
       started.current = true;
@@ -248,7 +259,7 @@ const AboutSection = () => {
     }
   }, [inView]);
 
-
+  // Type the command, then show its output.
   useEffect(() => {
     if (run.idx < 0) return;
     const full = COMMANDS[run.idx].cmd;
@@ -283,11 +294,14 @@ const AboutSection = () => {
   return (
     <section
       id="about"
-      className="relative scroll-mt-24 py-20 lg:py-28 font-sans"
+      aria-labelledby="about-heading"
+      className="relative py-20 font-sans focus:outline-none lg:py-28"
     >
+      <style>{`@keyframes about-caret { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }`}</style>
+
       <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 sm:px-6 lg:px-8 xl:pl-24 2xl:pl-8">
         {/* header */}
-        <div className="mb-12 lg:mb-16 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-12 flex flex-col gap-8 lg:mb-16 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <motion.div
               initial={reduce ? false : { opacity: 0, y: 20 }}
@@ -299,8 +313,11 @@ const AboutSection = () => {
               <SectionBadge title="About Me" />
             </motion.div>
 
-            <h2 className="text-[2.6rem] sm:text-6xl lg:text-[4.25rem] font-bold leading-[1.04] tracking-[-0.035em] text-[#0A0A0A] dark:text-white">
-              <span className="block overflow-hidden pb-[0.12em] -mb-[0.12em]">
+            <h2
+              id="about-heading"
+              className="text-[2.6rem] font-bold leading-[1.04] tracking-[-0.035em] text-[#0A0A0A] dark:text-white sm:text-6xl lg:text-[4.25rem]"
+            >
+              <span className="-mb-[0.12em] block overflow-hidden pb-[0.12em]">
                 <motion.span
                   className="block"
                   initial={reduce ? false : { y: "110%" }}
@@ -311,7 +328,7 @@ const AboutSection = () => {
                   Pixels up front.
                 </motion.span>
               </span>
-              <span className="block overflow-hidden pb-[0.12em] -mb-[0.12em]">
+              <span className="-mb-[0.12em] block overflow-hidden pb-[0.12em]">
                 <motion.span
                   className="block"
                   style={{ color: ACCENT }}
@@ -331,7 +348,7 @@ const AboutSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: smoothEase, delay: 0.3 }}
-            className="max-w-sm text-base sm:text-lg leading-relaxed text-[#5F6368] dark:text-[#A0A0A0]"
+            className="max-w-sm text-base leading-relaxed text-[#5F6368] dark:text-[#A0A0A0] sm:text-lg"
           >
             Hit a command and get to know me, the way a developer would.
           </motion.p>
@@ -339,10 +356,17 @@ const AboutSection = () => {
 
         {/* Plain-text version for screen readers */}
         <p className="sr-only">
-          Shariar Nafis is a Full Stack Developer who bridges clean,
-          user-centric UI and high-concurrency backend systems. He started with
-          CMS customization and now builds production-grade MERN and Next.js
+          {SITE.name} is a {SITE.role.toLowerCase()} who bridges clean,
+          user-focused UI and the APIs and databases behind it. He started with
+          CMS customization and now builds full stack MERN and Next.js
           applications. He is open to junior roles and freelance projects.
+        </p>
+
+        {/* announces which command is showing, without reading every line */}
+        <p role="status" className="sr-only">
+          {current && phase === "output"
+            ? `Showing ${current.label} in the terminal`
+            : ""}
         </p>
 
         {/* ------------------------------- BODY ------------------------------- */}
@@ -366,7 +390,7 @@ const AboutSection = () => {
               }}
             />
 
-            <div className="relative z-10 overflow-hidden rounded-2xl border border-black/10 dark:border-white/10 bg-[#0B0B0D] shadow-[0_30px_60px_rgba(0,0,0,0.18)] dark:shadow-black/60">
+            <div className="relative z-10 overflow-hidden rounded-2xl border border-black/10 bg-[#0B0B0D] shadow-[0_30px_60px_rgba(0,0,0,0.18)] dark:border-white/10 dark:shadow-black/60">
               {/* title bar */}
               <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.03] px-4 py-3">
                 <div className="flex gap-1.5" aria-hidden="true">
@@ -374,23 +398,28 @@ const AboutSection = () => {
                   <span className="h-2.5 w-2.5 rounded-full bg-[#FFBD2E]" />
                   <span className="h-2.5 w-2.5 rounded-full bg-[#27C93F]" />
                 </div>
-                <span className="font-mono text-[11px] text-zinc-500">
+                <span
+                  aria-hidden="true"
+                  className="font-mono text-xs text-zinc-400"
+                >
                   nafis — zsh
                 </span>
                 <span className="w-[42px]" aria-hidden="true" />
               </div>
 
-              {/* screen */}
+              {/* screen: focusable so keyboard users can scroll it */}
               <div
+                id="about-terminal"
                 ref={bodyRef}
                 role="region"
-                aria-label="Interactive terminal"
-                className="h-[400px] sm:h-[430px] overflow-y-auto p-4 sm:p-6 font-mono text-[12px] sm:text-[13px] leading-[1.75] text-zinc-200 [scrollbar-width:thin]"
+                aria-label="Terminal output"
+                tabIndex={0}
+                className="h-[400px] overflow-y-auto p-4 font-mono text-[13px] leading-[1.75] text-zinc-200 [scrollbar-width:thin] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400 sm:h-[430px] sm:p-6"
               >
                 {!current && (
                   <div>
                     <Prompt />
-                    <Caret blink />
+                    <Caret blink reduce={reduce} />
                   </div>
                 )}
 
@@ -398,12 +427,12 @@ const AboutSection = () => {
                   <div>
                     <Prompt />
                     <span className="text-zinc-100">{typed}</span>
-                    {phase === "typing" && <Caret />}
+                    {phase === "typing" && <Caret reduce={reduce} />}
                   </div>
                 )}
 
                 {phase === "output" && (
-                  <div aria-live="polite" className="mt-3 space-y-[1px]">
+                  <div className="mt-3 space-y-[1px]">
                     {lines.map((ln, k) => (
                       <motion.div
                         key={`${run.id}-${k}`}
@@ -426,11 +455,15 @@ const AboutSection = () => {
                       transition={{ delay: lines.length * 0.07 + 0.2 }}
                     >
                       <Prompt />
-                      <Caret blink />
-                      <span className="ml-3 text-zinc-600">
+                      <Caret blink reduce={reduce} />
+                      <span className="ml-3 text-zinc-400">
                         # pick another command{" "}
-                        <span className="hidden lg:inline">→</span>
-                        <span className="lg:hidden">↓</span>
+                        <span aria-hidden="true" className="hidden lg:inline">
+                          →
+                        </span>
+                        <span aria-hidden="true" className="lg:hidden">
+                          ↓
+                        </span>
                       </span>
                     </motion.div>
                   </div>
@@ -442,10 +475,14 @@ const AboutSection = () => {
           {/* Command palette + CTAs */}
           <div className="flex flex-col gap-6 lg:col-span-4 lg:justify-between">
             <div>
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5F6368] dark:text-[#8A8A8A]">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#5F6368] dark:text-[#8A8A8A]">
                 Try a command
               </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <div
+                role="group"
+                aria-label="Terminal commands"
+                className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1"
+              >
                 {COMMANDS.map((c, i) => {
                   const on = i === run.idx;
                   return (
@@ -453,6 +490,8 @@ const AboutSection = () => {
                       key={c.cmd}
                       type="button"
                       onClick={() => exec(i)}
+                      aria-pressed={on}
+                      aria-controls="about-terminal"
                       data-cursor="Run"
                       initial={reduce ? false : { opacity: 0, y: 16 }}
                       whileInView={{ opacity: 1, y: 0 }}
@@ -462,8 +501,7 @@ const AboutSection = () => {
                         ease: smoothEase,
                         delay: 0.05 * i,
                       }}
-                      aria-pressed={on}
-                      className="group flex items-center justify-between gap-3 rounded-2xl border bg-white/75 dark:bg-white/[0.04] px-4 py-3.5 text-left transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:last:col-span-2 lg:last:col-span-1"
+                      className={`group flex items-center justify-between gap-3 rounded-2xl border bg-white/75 px-4 py-3.5 text-left transition-all duration-300 hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:bg-white/[0.04] sm:last:col-span-2 lg:last:col-span-1 ${FOCUS}`}
                       style={{
                         borderColor: on
                           ? accentA(0.55)
@@ -475,12 +513,16 @@ const AboutSection = () => {
                         <span className="block text-sm font-semibold tracking-tight text-[#0A0A0A] dark:text-white">
                           {c.label}
                         </span>
-                        <span className="mt-0.5 block truncate font-mono text-[11px] text-[#5F6368] dark:text-[#A0A0A0]">
+                        <span className="mt-0.5 block truncate font-mono text-xs text-[#5F6368] dark:text-[#A0A0A0]">
                           $ {c.cmd}
                         </span>
                       </span>
+                      {/* the chevron turns down on the selected command (a cue that isn't colour) */}
                       <FiChevronRight
-                        className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                        className={`h-4 w-4 shrink-0 transition-transform duration-300 motion-reduce:transition-none ${
+                          on ? "rotate-90" : "group-hover:translate-x-0.5"
+                        }`}
                         style={{ color: on ? ACCENT : undefined }}
                       />
                     </motion.button>
@@ -492,21 +534,27 @@ const AboutSection = () => {
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
               <a
                 href={`#${CONTACT_TARGET}`}
-                onClick={go(CONTACT_TARGET, "Let’s Talk", EMAIL)}
+                onClick={go(CONTACT_TARGET, CTA.talk, MAILTO)}
                 data-cursor="Talk"
-                className="group inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#0A0A0A] px-6 py-3.5 text-sm font-medium tracking-tight text-white transition-all duration-300 hover:-translate-y-0.5 hover:opacity-90 dark:bg-white dark:text-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                className={`group inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#0A0A0A] px-6 py-3.5 text-sm font-medium tracking-tight text-white transition-all duration-300 hover:-translate-y-0.5 hover:opacity-90 motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:bg-white dark:text-[#0A0A0A] ${FOCUS}`}
               >
-                Let&rsquo;s talk
-                <FiArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                {CTA.talk}
+                <FiArrowUpRight
+                  aria-hidden="true"
+                  className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0"
+                />
               </a>
               <a
                 href={`#${WORK_TARGET}`}
                 onClick={go(WORK_TARGET, "Featured Works")}
                 data-cursor="View"
-                className="group inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-black/[0.08] dark:border-white/10 bg-white/70 dark:bg-white/5 px-6 py-3.5 text-sm font-medium tracking-tight text-[#0A0A0A] dark:text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                className={`group inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-6 py-3.5 text-sm font-medium tracking-tight text-[#0A0A0A] transition-all duration-300 hover:-translate-y-0.5 hover:bg-white motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 ${FOCUS}`}
               >
                 See my work
-                <FiArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
+                <FiArrowDown
+                  aria-hidden="true"
+                  className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+                />
               </a>
             </div>
           </div>
