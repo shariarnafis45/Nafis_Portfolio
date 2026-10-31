@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Shariar Nafis | Junior Full Stack Developer",
+  title: "Shariar Nafis | Junior Full Stack Engineer",
   description:
-    "Portfolio of Shariar Nafis, a Junior Full Stack Developer building MERN and Next.js web apps. Open to junior roles and freelance projects.",
+    "Portfolio of Shariar Nafis, a Junior Full Stack Engineer building MERN and Next.js web apps. Open to junior roles and freelance projects.",
 };
 
 export default function RootLayout({ children }) {

@@ -1,7 +1,13 @@
+/*
+  Single source of truth for the portfolio.
+  Import with:  import { SITE, CTA, ... } from "@/lib/site";
+  Save this file as:  lib/site.js
+*/
+
 export const SITE = {
   name: "Shariar Nafis", // public name
   brand: "Nafix", // brand / handle only
-  role: "Junior Full Stack Developer",
+  role: "Junior Full Stack Engineer",
   availability: "Open to junior roles & freelance projects",
   email: "nafisshahworkmail@gmail.com",
   whatsappNumber: "8801774907808", // +880 1774-907808
